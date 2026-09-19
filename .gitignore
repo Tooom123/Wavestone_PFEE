@@ -6,7 +6,8 @@ CONTEXT.md
 *.csv
 *.parquet
 *.xlsx
-data/
+data/**
+!data/
 !data/README.md
 
 # Secrets
