@@ -33,8 +33,65 @@ Resultats obtenus :
 Redige la reponse au decideur en 3 a 6 phrases."""
 
 
+#: Au-dela de cette proportion de valeurs distinctes, une colonne texte est suspecte.
+_IDENTIFIER_RATIO = 0.9
+
+#: En dessous de ce nombre de modalites, une colonne texte est une categorie metier
+#: (« Furniture », « Technology »...) : elle doit rester lisible, la synthese en a besoin.
+_MAX_CATEGORY_VALUES = 25
+
+
+def _is_identifier_column(values: list) -> bool:
+    """Vrai si une colonne se comporte comme un identifiant plutot qu'une categorie.
+
+    Le critere decisif est le nombre **absolu** de modalites, pas leur proportion : une
+    table de 3 categories a 100 % de valeurs distinctes sans etre un identifiant.
+    """
+    textual = [v for v in values if isinstance(v, str)]
+    if len(textual) < len(values) * 0.9 or not textual:
+        return False
+
+    distinct = set(textual)
+    if len(distinct) <= _MAX_CATEGORY_VALUES:
+        return False  # categorie metier : on la garde lisible
+
+    return len(distinct) >= _IDENTIFIER_RATIO * len(textual)
+
+
+def summarize_for_llm(payload, *, max_rows: int) -> tuple[list[str], list[list], str]:
+    """Reduit une table a ce que l'etage 2 a le droit de voir.
+
+    L'artefact stocke conserve ses valeurs — le rapport en a besoin. Mais une colonne
+    d'identifiants n'a rien a faire dans le contexte du LLM : elle est remplacee par un
+    marqueur, et les colonnes numeriques par leurs bornes. Le modele peut alors decrire
+    la tendance sans citer un client nommement.
+    """
+    columns = list(payload.columns)
+    rows = payload.rows
+    masked_indices = {
+        index
+        for index in range(len(columns))
+        if _is_identifier_column([row[index] for row in rows if index < len(row)])
+    }
+
+    note = ""
+    if masked_indices:
+        names = ", ".join(columns[i] for i in sorted(masked_indices))
+        note = f"\n  (colonne(s) d'identifiants masquee(s) : {names} — ne pas citer de valeur)"
+
+    kept: list[list] = []
+    for row in rows[:max_rows]:
+        kept.append(
+            ["<identifiant masque>" if i in masked_indices else v for i, v in enumerate(row)]
+        )
+    return columns, kept, note
+
+
 def describe_artifacts(artifacts: list[Artifact], *, max_rows: int = 12) -> str:
-    """Rend les artefacts sous forme lisible pour le prompt de synthese."""
+    """Rend les artefacts sous forme lisible pour le prompt de synthese.
+
+    Les identifiants sont masques : voir :func:`summarize_for_llm`.
+    """
     if not artifacts:
         return "(aucun resultat)"
 
@@ -42,14 +99,15 @@ def describe_artifacts(artifacts: list[Artifact], *, max_rows: int = 12) -> str:
     for art in artifacts:
         payload = art.payload
         if payload.kind == "table":
-            head = " | ".join(payload.columns)
-            rows = [" | ".join(str(v) for v in row) for row in payload.rows[:max_rows]]
+            columns, shown, note = summarize_for_llm(payload, max_rows=max_rows)
+            head = " | ".join(columns)
+            rows = [" | ".join(str(v) for v in row) for row in shown]
             extra = (
                 f"\n  ... ({len(payload.rows) - max_rows} lignes supplementaires)"
                 if len(payload.rows) > max_rows
                 else ""
             )
-            blocks.append(f"[{art.title}]\n  {head}\n  " + "\n  ".join(rows) + extra)
+            blocks.append(f"[{art.title}]\n  {head}\n  " + "\n  ".join(rows) + extra + note)
         elif payload.kind == "finding":
             confidence = f" (confiance {payload.confidence:.0%})" if payload.confidence else ""
             blocks.append(f"[{art.title}] {payload.statement}{confidence} — {payload.evidence}")

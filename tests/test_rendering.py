@@ -94,3 +94,50 @@ def test_rapport_markdown() -> None:
     assert md.startswith("# Les ventes sont-elles bonnes ?")
     assert "| annee | ca |" in md
     assert "'bonnes' = en croissance" in md
+
+
+def test_identifiants_masques_avant_la_synthese() -> None:
+    """Parti pris 1 : aucun identifiant client ne doit entrer dans le contexte du LLM."""
+    rows = [[f"{i:04d}-ABCDE", 0.5 + i / 100] for i in range(40)]
+    art = [
+        Artifact(
+            id="a",
+            step_id="s1",
+            title="Risque par client",
+            payload=Table(columns=["customerID", "risque"], rows=rows),
+        )
+    ]
+    text = describe_artifacts(art)
+    assert "0001-ABCDE" not in text
+    assert "identifiant masque" in text
+    assert "0.5" in text, "les scores doivent rester lisibles"
+
+
+def test_categories_metier_preservees() -> None:
+    """Une categorie n'est pas un identifiant, meme si toutes ses valeurs sont distinctes."""
+    art = [
+        Artifact(
+            id="a",
+            step_id="s1",
+            title="Marge par categorie",
+            payload=Table(
+                columns=["categorie", "marge"],
+                rows=[["Furniture", 68.1], ["Office Supplies", 112.4], ["Technology", 429.2]],
+            ),
+        )
+    ]
+    text = describe_artifacts(art)
+    assert "Furniture" in text and "Technology" in text
+
+
+def test_artefact_stocke_conserve_les_identifiants() -> None:
+    """Le masquage ne concerne que le prompt : le rapport garde les valeurs utiles."""
+    rows = [[f"{i:04d}-ABCDE", 0.9] for i in range(40)]
+    artifact = Artifact(
+        id="a",
+        step_id="s1",
+        title="Risque",
+        payload=Table(columns=["customerID", "risque"], rows=rows),
+    )
+    report = Report.build(_plan(), [artifact], "Synthese.")
+    assert "0001-ABCDE" in report.to_json()
