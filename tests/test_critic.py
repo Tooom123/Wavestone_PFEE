@@ -104,3 +104,29 @@ def test_critique_ne_fait_pas_fuiter_les_donnees() -> None:
         client=FakeLLM([]),
     )
     assert "7590-VHVEG" not in " ".join(critique.issues)
+
+
+def test_ligne_du_code_genere_privilegiee() -> None:
+    """Une trace pandas profonde ne doit pas noyer la ligne fautive du code genere."""
+    trace = "\n".join(
+        [
+            "Traceback (most recent call last):",
+            '  File "/workspace/code.py", line 3, in <module>',
+            "    corr = df.corr()",
+            *[f'  File "/usr/local/lib/pandas/core/frame.py", line {i}' for i in range(30)],
+            "ValueError: could not convert string to float",
+        ]
+    )
+    essentials = _error_essentials(trace)
+    assert "/workspace/code.py" in essentials
+    assert "corr = df.corr()" in essentials
+    assert "ValueError" in essentials
+
+
+def test_colonne_inexistante_lisible_par_le_modele() -> None:
+    """Un KeyError sur une colonne inventee doit rester lisible : ce n'est pas une donnee."""
+    assert "NoSuchColumn" in redact_data_values("KeyError: 'NoSuchColumn'")
+
+
+def test_valeur_de_donnee_masquee_meme_courte() -> None:
+    assert "7590-VHVEG" not in redact_data_values("could not convert to float: '7590-VHVEG'")

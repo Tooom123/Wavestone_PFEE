@@ -118,6 +118,21 @@ def _judge_failure(
 _MAX_TOKEN_LENGTH = 60
 
 
+def _looks_like_identifier(value: str) -> bool:
+    """Vrai pour un nom de colonne plausible, faux pour une valeur de donnees.
+
+    Un identifiant est court, sans chiffre isole ni ponctuation de donnee. Le doute
+    profite au masquage.
+    """
+    import re as _re
+
+    if len(value) > 40 or any(c in value for c in ",;\t\n"):
+        return False
+    return bool(_re.fullmatch(r"[A-Za-z][A-Za-z0-9 _.-]*", value)) and not _re.search(
+        r"\d{3,}", value
+    )
+
+
 def _error_essentials(
     stderr: str, *, max_chars: int = 2000, known_columns: set[str] | None = None
 ) -> str:
@@ -136,10 +151,19 @@ def _error_essentials(
     if not lines:
         return "(aucune sortie d'erreur)"
 
+    # Les frames internes des bibliotheques n'apprennent rien au modele : ce qui compte
+    # est la ligne de SON code et le message final. Une trace pandas profonde repousse
+    # sinon le message utile hors de la fenetre conservee.
+    own_frames = [
+        line
+        for index, line in enumerate(lines)
+        if "/workspace/code.py" in line or (index and "/workspace/code.py" in lines[index - 1])
+    ]
+
     # La derniere ligne non vide porte le type et le message de l'exception.
-    tail = lines[-6:]
-    head = lines[:4] if len(lines) > 10 else []
-    essentials = "\n".join([*head, *(["  ..."] if head else []), *tail])
+    tail = lines[-2:]
+    kept = [*own_frames[-4:], *[line for line in tail if line not in own_frames]]
+    essentials = "\n".join(kept) if kept else "\n".join(lines[-4:])
     return redact_data_values(essentials, known_columns=known_columns)[-max_chars:]
 
 
@@ -159,7 +183,13 @@ def redact_data_values(text: str, *, known_columns: set[str] | None = None) -> s
     # eux, apparaissent entre quotes doubles dans les traces Python et restent utiles.
     def _mask_quoted(match: re.Match[str]) -> str:
         inner = match.group(1)
-        return match.group(0) if inner in columns else "'<valeur masquee>'"
+        if inner in columns:
+            return match.group(0)
+        # Un nom de colonne inexistant (KeyError) ressemble a un identifiant : le
+        # modele en a besoin pour corriger son code, et ce n'est pas une donnee.
+        if _looks_like_identifier(inner):
+            return match.group(0)
+        return "'<valeur masquee>'"
 
     text = re.sub(r"'([^']{4,})'", _mask_quoted, text)
 
