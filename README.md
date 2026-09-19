@@ -28,12 +28,26 @@ Les deux etages sont testables et evaluables independamment.
 
 1. **Le LLM ne voit jamais les donnees brutes.** Seul le *profil* du dataset (schema, types,
    cardinalites, taux de nulls, stats descriptives) entre dans son contexte. Le code
-   s'execute sur les donnees, le LLM raisonne sur les metadonnees.
+   s'execute sur les donnees, le LLM raisonne sur les metadonnees. Les traces d'erreur qui
+   repartent vers le modele sont expurgees des valeurs citees par pandas, sans quoi la
+   boucle de correction reinjecterait des donnees.
 2. **Code-as-action.** L'agent ecrit du pandas/scikit-learn reellement execute, plutot que
    d'appeler des fonctions predefinies — ce qui garde l'espace d'analyse ouvert. Contrepartie
    obligatoire : le **sandbox**.
 3. **Contrat d'artefacts JSON entre les deux etages.** Streamlit et le rapport Word/PDF sont
    deux *renderers* du meme JSON ; le format de sortie peut etre tranche plus tard.
+
+### Le sandbox
+
+Le code genere par le LLM ne s'execute **jamais** sur la machine hote. Il tourne dans un
+conteneur jetable : reseau coupe (`--network none`), racine en lecture seule, CSV montes en
+lecture seule, capacites Linux retirees, utilisateur non privilegie, quotas memoire/CPU et
+timeout. Seul `/workspace/out` est accessible en ecriture.
+
+Si Docker est indisponible, l'agent **refuse d'executer** : il n'existe aucun repli sur
+l'hote, et il ne faut pas en ajouter. Ces garanties sont couvertes par des tests
+(`tests/test_sandbox.py`) qui verifient reellement que le reseau est injoignable, qu'une
+boucle infinie est tuee et qu'une ecriture hors zone de sortie echoue.
 
 ## Stack
 
