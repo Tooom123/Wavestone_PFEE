@@ -26,5 +26,10 @@ jobs:
       - name: Format (ruff)
         run: uv run ruff format --check .
 
+      - name: Construit l'image du sandbox
+        run: docker build -t agent-data-sandbox:latest -f docker/sandbox.Dockerfile docker/
+
       - name: Tests (pytest)
+        # Docker est disponible sur les runners GitHub : les tests d'isolation du
+        # sandbox tournent donc reellement en CI.
         run: uv run pytest
