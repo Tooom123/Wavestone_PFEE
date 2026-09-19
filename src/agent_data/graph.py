@@ -91,6 +91,7 @@ class Stage1:
             return state
 
         previous_error: str | None = None
+        best_artifacts: list = []
         while not state.budget_exhausted:
             state.iteration += 1
             trace.add(f"--- iteration {state.iteration}/{state.max_iterations}")
@@ -119,6 +120,9 @@ class Stage1:
                 if state.execution.status is not ExecutionStatus.SUCCESS
                 else None
             )
+            if len(state.execution.artifacts) > len(best_artifacts):
+                best_artifacts = list(state.execution.artifacts)
+
             state.critique = review(
                 state.plan, state.execution, client=self.client, known_columns=known_columns
             )
@@ -133,13 +137,14 @@ class Stage1:
                 state.plan = plan_analysis(question, state.profiles, client=self.client)
                 trace.add("replanification")
 
-        # Budget epuise : on rend le meilleur resultat disponible plutot que rien.
+        # Budget epuise : on rend le meilleur resultat obtenu, pas celui de la derniere
+        # iteration — une tentative tardive peut avoir echoue alors qu'une precedente
+        # avait produit des resultats exploitables.
         state.errors.append(
             f"Plafond de {state.max_iterations} iterations atteint sans resultat satisfaisant."
         )
-        if state.execution:
-            state.artifacts = list(state.execution.artifacts)
-        trace.add("budget epuise")
+        state.artifacts = list(best_artifacts)
+        trace.add(f"budget epuise ({len(state.artifacts)} artefact(s) conserve(s))")
         return state
 
 

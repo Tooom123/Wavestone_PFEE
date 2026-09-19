@@ -120,3 +120,21 @@ def test_colonnes_hallucinees_filtrees(csv_ventes: Path) -> None:
 
     assert state.plan is not None
     assert state.plan.steps[0].columns == ["montant"]
+
+
+def test_meilleurs_artefacts_conserves_malgre_l_echec_final(
+    csv_ventes: Path, plan_json: str, ok_result: ExecutionResult
+) -> None:
+    """Une iteration tardive ratee ne doit pas effacer les resultats d'une precedente."""
+    empty = ExecutionResult(status=ExecutionStatus.SUCCESS, stdout="rien")
+    llm = FakeLLM(
+        [plan_json] + [CODE, json.dumps({"is_satisfactory": False, "issues": ["insuffisant"]})] * 3
+    )
+    # iteration 1 : 1 artefact ; iterations 2 et 3 : aucun.
+    sandbox = FakeSandbox([ok_result, empty, empty])
+    stage = _stage(llm, sandbox, max_iterations=3)
+
+    state = stage.run("q", [csv_ventes])
+
+    assert state.errors, "le run doit signaler que le plafond est atteint"
+    assert len(state.artifacts) == 1, "l'artefact de la premiere iteration doit survivre"
