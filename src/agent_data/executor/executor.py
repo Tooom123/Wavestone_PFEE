@@ -39,7 +39,7 @@ Contraintes absolues :
 _ARTIFACT_CONTRACT = """Pour enregistrer tes resultats, utilise le module `agent_out`,
 deja installe. N'ecris jamais les fichiers JSON toi-meme :
 
-    from agent_out import save_table, save_figure, save_finding
+    from agent_out import save_table, save_figure, save_finding   # <- ligne obligatoire
 
     save_table(df, "Marge moyenne par categorie", step_id="s1")
     save_figure(fig, "Evolution du CA", step_id="s2")
@@ -50,7 +50,9 @@ deja installe. N'ecris jamais les fichiers JSON toi-meme :
 `save_table` accepte un DataFrame pandas, `save_figure` une figure Plotly, et
 `save_finding` une phrase de conclusion adossee a un chiffre.
 
-Termine toujours par au moins un `save_finding` qui repond a la question posee."""
+Commence toujours ton script par cette ligne d'import, sans quoi il echouera sur un
+NameError. Termine toujours par au moins un `save_finding` qui repond a la question
+posee."""
 
 
 def build_prompt(

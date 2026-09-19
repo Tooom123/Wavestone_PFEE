@@ -20,6 +20,7 @@ from pathlib import Path
 
 from agent_data.config import Settings, get_settings
 from agent_data.critic import review
+from agent_data.critic.critic import redact_data_values
 from agent_data.executor import generate_code
 from agent_data.llm import LLMClient, get_client
 from agent_data.planner import plan_analysis
@@ -79,6 +80,7 @@ class Stage1:
             max_iterations=self.settings.max_iterations,
         )
         trace.add(f"profilage : {len(state.profiles)} dataset(s)")
+        known_columns = {c.name for p in state.profiles for c in p.columns}
 
         state.plan = plan_analysis(question, state.profiles, client=self.client)
         trace.add(f"plan : {len(state.plan.steps)} etape(s) — {state.plan.restated_question}")
@@ -110,12 +112,16 @@ class Stage1:
                 f"{state.execution.duration_seconds:.1f}s)"
             )
 
+            # L'erreur repart vers l'executeur : elle doit etre expurgee des valeurs de
+            # donnees, sans quoi la boucle de correction les reinjecterait dans le LLM.
             previous_error = (
-                state.execution.stderr
+                redact_data_values(state.execution.stderr[-2000:], known_columns=known_columns)
                 if state.execution.status is not ExecutionStatus.SUCCESS
                 else None
             )
-            state.critique = review(state.plan, state.execution, client=self.client)
+            state.critique = review(
+                state.plan, state.execution, client=self.client, known_columns=known_columns
+            )
 
             if state.critique.is_satisfactory:
                 state.artifacts = list(state.execution.artifacts)

@@ -44,9 +44,14 @@ def review(
     execution: ExecutionResult,
     *,
     client: LLMClient | None = None,
+    known_columns: set[str] | None = None,
 ) -> Critique:
-    """Juge un resultat d'execution."""
-    verdict = _judge_failure(execution)
+    """Juge un resultat d'execution.
+
+    `known_columns` liste les noms de colonnes des datasets : ils font partie du schema,
+    deja connu du modele, et restent donc lisibles dans les messages d'erreur.
+    """
+    verdict = _judge_failure(execution, known_columns=known_columns)
     if verdict is not None:
         return verdict
 
@@ -69,7 +74,9 @@ def review(
         )
 
 
-def _judge_failure(execution: ExecutionResult) -> Critique | None:
+def _judge_failure(
+    execution: ExecutionResult, *, known_columns: set[str] | None = None
+) -> Critique | None:
     """Verdict deterministe pour les cas ou le LLM n'apporte rien."""
     if execution.status is ExecutionStatus.TIMEOUT:
         return Critique(
@@ -84,7 +91,10 @@ def _judge_failure(execution: ExecutionResult) -> Critique | None:
     if execution.status is ExecutionStatus.ERROR:
         return Critique(
             is_satisfactory=False,
-            issues=[f"Le code a echoue :\n{_error_essentials(execution.stderr)}"],
+            issues=[
+                "Le code a echoue :\n"
+                + _error_essentials(execution.stderr, known_columns=known_columns)
+            ],
             suggestion=(
                 "Corriger precisement cette erreur. Ne reproduis pas le meme appel : "
                 "change la ligne fautive."
@@ -103,12 +113,24 @@ def _judge_failure(execution: ExecutionResult) -> Critique | None:
     return None
 
 
-def _error_essentials(stderr: str, *, max_chars: int = 2000) -> str:
+#: Au-dela de cette longueur, un fragment sans espace est presque surement une suite de
+#: valeurs de donnees recrachees par pandas, pas un message d'erreur.
+_MAX_TOKEN_LENGTH = 60
+
+
+def _error_essentials(
+    stderr: str, *, max_chars: int = 2000, known_columns: set[str] | None = None
+) -> str:
     """Isole la partie utile d'une trace : la ligne fautive et le message d'erreur.
 
     Tronquer la fin d'une trace ferait disparaitre le message d'exception, qui est
     justement la seule information dont le modele a besoin pour corriger. Sans lui, il
     regenere le meme code a l'identique.
+
+    La trace est aussi **expurgee des valeurs de donnees** : pandas recopie volontiers
+    le contenu fautif dans son message (« could not convert string to float:
+    '7590-VHVEG' »). Sans ce filtrage, la boucle de correction reinjecterait des donnees
+    brutes dans le contexte du LLM, ce que le projet s'interdit.
     """
     lines = [line for line in stderr.strip().splitlines() if line.strip()]
     if not lines:
@@ -118,7 +140,37 @@ def _error_essentials(stderr: str, *, max_chars: int = 2000) -> str:
     tail = lines[-6:]
     head = lines[:4] if len(lines) > 10 else []
     essentials = "\n".join([*head, *(["  ..."] if head else []), *tail])
-    return essentials[-max_chars:]
+    return redact_data_values(essentials, known_columns=known_columns)[-max_chars:]
+
+
+def redact_data_values(text: str, *, known_columns: set[str] | None = None) -> str:
+    """Remplace les fragments qui ressemblent a des valeurs de donnees.
+
+    Heuristique volontairement large : mieux vaut masquer un bout de message technique
+    que laisser fuir une valeur du jeu de donnees. Les noms de colonnes sont epargnes,
+    car ils appartiennent au schema, que le modele connait deja par le profil.
+    """
+    import re
+
+    columns = known_columns or set()
+
+    # Valeurs entre quotes simples : c'est ainsi que pandas cite le contenu fautif
+    # (« could not convert string to float: '7590-VHVEG' »). Les chemins de fichiers,
+    # eux, apparaissent entre quotes doubles dans les traces Python et restent utiles.
+    def _mask_quoted(match: re.Match[str]) -> str:
+        inner = match.group(1)
+        return match.group(0) if inner in columns else "'<valeur masquee>'"
+
+    text = re.sub(r"'([^']{4,})'", _mask_quoted, text)
+
+    # Longues suites sans espace : concatenations de valeurs (ids, categories...).
+    def _mask(match: re.Match[str]) -> str:
+        token = match.group(0)
+        if "/" in token:  # chemin de fichier : utile au diagnostic
+            return token
+        return "<valeurs masquees>"
+
+    return re.sub(rf"\S{{{_MAX_TOKEN_LENGTH},}}", _mask, text)
 
 
 def _describe_artifacts(execution: ExecutionResult) -> str:
