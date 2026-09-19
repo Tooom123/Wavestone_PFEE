@@ -106,3 +106,48 @@ def test_encodeur_json_tolere_numpy(tmp_path: Path, monkeypatch: pytest.MonkeyPa
     _load("sitecustomize", monkeypatch, tmp_path)
     blob = json.dumps({"a": np.int64(5), "b": np.float64(1.5), "c": np.array([1, 2])})
     assert json.loads(blob) == {"a": 5, "b": 1.5, "c": [1, 2]}
+
+
+def test_numeric_only_rend_corr_possible(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    """`df.corr()` sur des colonnes texte est l'echec le plus frequent du code genere."""
+    agent_out = _load("agent_out", monkeypatch, tmp_path)
+    df = pd.DataFrame({"id": ["a", "b", "c"], "x": [1.0, 2.0, 3.0], "y": [3.0, 2.0, 1.0]})
+
+    numeric = agent_out.numeric_only(df)
+
+    assert list(numeric.columns) == ["x", "y"]
+    assert numeric.corr().shape == (2, 2)
+
+
+def test_encode_features_retire_les_identifiants(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Un identifiant encode ferait exploser le nombre de colonnes."""
+    agent_out = _load("agent_out", monkeypatch, tmp_path)
+    df = pd.DataFrame(
+        {
+            "customerID": [f"ID-{i}" for i in range(20)],
+            "genre": ["M", "F"] * 10,
+            "montant": range(20),
+            "cible": ["oui", "non"] * 10,
+        }
+    )
+
+    X, y = agent_out.encode_features(df, target="cible")
+
+    assert not any("customerID" in c for c in X.columns)
+    assert len(y) == 20
+    assert X.shape[1] < 5, "seules genre et montant doivent subsister"
+
+
+def test_encode_features_recupere_une_colonne_numerique_en_texte(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """TotalCharges arrive en texte dans telco : il doit redevenir numerique."""
+    agent_out = _load("agent_out", monkeypatch, tmp_path)
+    df = pd.DataFrame({"charges": ["10.5", "20.5", " ", "30.5"], "x": [1, 2, 3, 4]})
+
+    X = agent_out.encode_features(df)
+
+    assert "charges" in X.columns
+    assert X["charges"].dtype.kind == "f"

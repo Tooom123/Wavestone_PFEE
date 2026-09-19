@@ -40,6 +40,7 @@ _ARTIFACT_CONTRACT = """Pour enregistrer tes resultats, utilise le module `agent
 deja installe. N'ecris jamais les fichiers JSON toi-meme :
 
     from agent_out import save_table, save_figure, save_finding   # <- ligne obligatoire
+    from agent_out import numeric_only, encode_features
 
     save_table(df, "Marge moyenne par categorie", step_id="s1")
     save_figure(fig, "Evolution du CA", step_id="s2")
@@ -49,6 +50,12 @@ deja installe. N'ecris jamais les fichiers JSON toi-meme :
 
 `save_table` accepte un DataFrame pandas, `save_figure` une figure Plotly, et
 `save_finding` une phrase de conclusion adossee a un chiffre.
+
+Deux helpers evitent les erreurs les plus frequentes :
+  - `numeric_only(df)` avant tout calcul global : `numeric_only(df).corr()`, jamais
+    `df.corr()` qui echoue des qu'une colonne texte traine.
+  - `encode_features(df, target="Churn")` avant un modele : il encode les categorielles,
+    retire les identifiants et retourne (X, y) prets a l'emploi.
 
 Commence toujours ton script par cette ligne d'import, sans quoi il echouera sur un
 NameError. Termine toujours par au moins un `save_finding` qui repond a la question
