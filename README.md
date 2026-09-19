@@ -28,9 +28,17 @@ Les deux etages sont testables et evaluables independamment.
 
 1. **Le LLM ne voit jamais les donnees brutes.** Seul le *profil* du dataset (schema, types,
    cardinalites, taux de nulls, stats descriptives) entre dans son contexte. Le code
-   s'execute sur les donnees, le LLM raisonne sur les metadonnees. Les traces d'erreur qui
-   repartent vers le modele sont expurgees des valeurs citees par pandas, sans quoi la
-   boucle de correction reinjecterait des donnees.
+   s'execute sur les donnees, le LLM raisonne sur les metadonnees.
+
+   Deux chemins de retour ont ete fermes, car un run reel les a empruntes :
+   - les **traces d'erreur** reparties vers le modele a l'iteration suivante — pandas y
+     recopie la valeur fautive (`could not convert string to float: '7590-VHVEG'`) ;
+   - les **artefacts** relus par l'etage 2 — un scoring par client embarque naturellement
+     une colonne d'identifiants.
+
+   Dans les deux cas la valeur est masquee avant d'atteindre le modele, tandis que
+   l'artefact stocke conserve tout : le rapport affiche le score par client, la synthese
+   decrit la tendance sans pouvoir nommer personne.
 2. **Code-as-action.** L'agent ecrit du pandas/scikit-learn reellement execute, plutot que
    d'appeler des fonctions predefinies — ce qui garde l'espace d'analyse ouvert. Contrepartie
    obligatoire : le **sandbox**.
