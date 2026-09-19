@@ -74,12 +74,24 @@ sandbox.
 Completer `DATASETS` dans `scripts/download_data.py`, puis documenter le jeu dans
 `data/README.md`. Aucun CSV ne doit etre commite.
 
+## Fiabiliser le code genere
+
+Un modele de 14B ne suit pas un contrat decrit en prose. La lecon apprise sur ce projet :
+**lui donner une fonction vaut mieux que lui donner une regle**. Quand une erreur revient,
+le reflexe est d'ajouter un helper dans `docker/agent_out.py` et de le citer dans le prompt
+de `executor/executor.py` — pas d'allonger la liste des interdits.
+
+Les helpers disponibles dans le sandbox :
+
+| Fonction | Evite |
+|---|---|
+| `save_table` / `save_figure` / `save_finding` | Des artefacts hors contrat, silencieusement ignores |
+| `numeric_only(df)` | `df.corr()` qui echoue des qu'une colonne texte traine |
+| `encode_features(df, target=...)` | Un identifiant encode en milliers de colonnes, une colonne numerique restee en texte |
+
 ## Limites connues
 
-- Le modele local (14B) se trompe regulierement du premier coup : appel manquant a
-  `from agent_out import ...`, `df.corr()` sur des colonnes texte, encodage oublie avant
-  un modele de ML. La boucle de correction rattrape ces cas ; le prompt de
-  `executor/executor.py` les anticipe un par un. Ajouter une regle plutot que de
-  contourner le probleme dans le code.
+- Le modele local (14B) se trompe regulierement du premier coup. La boucle de correction
+  rattrape ces cas ; les helpers ci-dessus suppriment les plus frequents a la racine.
 - Les runs qui impliquent du ML (telco_churn) sont nettement plus longs que les analyses
   descriptives : compter plusieurs minutes.
