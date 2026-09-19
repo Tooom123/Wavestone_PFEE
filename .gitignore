@@ -1,0 +1,36 @@
+# Contexte projet (local, jamais versionné)
+CONTEXT.md
+*:Zone.Identifier
+
+# Données brutes — aucun CSV versionné (décision Wavestone)
+*.csv
+*.parquet
+*.xlsx
+data/
+!data/README.md
+
+# Secrets
+.env
+.env.*
+!.env.example
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+build/
+dist/
+.venv/
+venv/
+
+# Outils
+.pytest_cache/
+.ruff_cache/
+.mypy_cache/
+.coverage
+htmlcov/
+
+# OS / IDE
+.DS_Store
+.idea/
+*.swp
