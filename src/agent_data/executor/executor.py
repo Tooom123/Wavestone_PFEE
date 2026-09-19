@@ -21,19 +21,31 @@ conteneur isole, sans acces reseau.
 Contraintes absolues :
 - Bibliotheques disponibles : pandas, numpy, scipy, scikit-learn, plotly, duckdb, json.
 - Aucun acces reseau, aucun `pip install`, aucune lecture hors des chemins indiques.
+- Tu lis les CSV avec `pandas.read_csv`, pas avec DuckDB.
+- Les noms de colonnes contenant un espace s'ecrivent df['Order Date'] : jamais dans une
+  requete SQL, ou ils seraient pris pour des chaines de caracteres.
+- Tu convertis explicitement les colonnes de dates avec `pd.to_datetime` avant d'en
+  extraire une annee ou un mois.
+- Toute valeur ecrite dans un artefact doit etre un type Python natif (int, float, str) :
+  convertis les types numpy avec int(), float() ou .item().
 - Tu ecris tes resultats dans /workspace/out/ sous forme de fichiers JSON d'artefacts.
 - Tu reponds UNIQUEMENT par un bloc de code Python, sans explication autour."""
 
-_ARTIFACT_CONTRACT = """Chaque artefact est un objet JSON de la forme :
-  {"id": "<unique>", "step_id": "<id de l'etape>", "title": "<titre lisible>",
-   "payload": <payload>}
-ou <payload> vaut :
-  - tableau : {"kind": "table", "columns": [...], "rows": [[...], ...]}
-  - figure  : {"kind": "figure", "spec": <figure plotly en dict>}
-  - constat : {"kind": "finding", "statement": "...", "evidence": "...", \
-"confidence": 0.0-1.0}
-Ecris-les avec json.dump dans /workspace/out/<nom>.json (un fichier peut contenir une
-liste d'artefacts)."""
+_ARTIFACT_CONTRACT = """Pour enregistrer tes resultats, utilise le module `agent_out`,
+deja installe. N'ecris jamais les fichiers JSON toi-meme :
+
+    from agent_out import save_table, save_figure, save_finding
+
+    save_table(df, "Marge moyenne par categorie", step_id="s1")
+    save_figure(fig, "Evolution du CA", step_id="s2")
+    save_finding("La categorie Furniture est la moins rentable",
+                 evidence="marge moyenne 68 EUR contre 429 pour Technology",
+                 confidence=0.9, step_id="s3")
+
+`save_table` accepte un DataFrame pandas, `save_figure` une figure Plotly, et
+`save_finding` une phrase de conclusion adossee a un chiffre.
+
+Termine toujours par au moins un `save_finding` qui repond a la question posee."""
 
 
 def build_prompt(

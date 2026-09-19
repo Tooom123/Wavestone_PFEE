@@ -16,6 +16,11 @@ RUN pip install --no-cache-dir \
 RUN useradd --create-home --uid 10001 sandbox
 USER sandbox
 
+# Rend l'encodeur JSON tolerant aux types numpy, que le code genere manipule sans y penser.
+COPY sitecustomize.py /usr/local/lib/python3.12/site-packages/sitecustomize.py
+# Helpers d'ecriture des artefacts : `from agent_out import save_table, ...`
+COPY agent_out.py /usr/local/lib/python3.12/site-packages/agent_out.py
+
 WORKDIR /workspace
 
 # /workspace/data  : CSV montes en lecture seule
