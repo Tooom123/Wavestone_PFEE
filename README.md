@@ -133,6 +133,20 @@ scripts/           setup.sh (installation) et download_data.py
 tests/
 ```
 
+## Evaluation
+
+Les deux etages sont evalues separement — c'est tout l'interet du decoupage demande par
+Wavestone. Un cas par famille d'analyse :
+
+```bash
+uv run python scripts/run_eval.py                      # les trois cas
+uv run python scripts/run_eval.py --case ventes_qualite
+uv run python scripts/run_eval.py --stage 1            # etage 1 uniquement
+```
+
+Chaque cas declenche un run reel (LLM local + sandbox) : compter une a trois minutes par
+cas, davantage pour ceux qui impliquent du ML.
+
 ## Jeux de donnees
 
 Trois jeux couvrent les trois familles d'analyse du perimetre. `./scripts/setup.sh` les
