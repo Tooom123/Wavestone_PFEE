@@ -84,8 +84,11 @@ def _judge_failure(execution: ExecutionResult) -> Critique | None:
     if execution.status is ExecutionStatus.ERROR:
         return Critique(
             is_satisfactory=False,
-            issues=[f"Le code a echoue : {execution.stderr[-1500:]}"],
-            suggestion="Corriger l'erreur signalee par la trace.",
+            issues=[f"Le code a echoue :\n{_error_essentials(execution.stderr)}"],
+            suggestion=(
+                "Corriger precisement cette erreur. Ne reproduis pas le meme appel : "
+                "change la ligne fautive."
+            ),
             replan=False,
         )
     if not execution.artifacts:
@@ -98,6 +101,24 @@ def _judge_failure(execution: ExecutionResult) -> Critique | None:
             replan=False,
         )
     return None
+
+
+def _error_essentials(stderr: str, *, max_chars: int = 2000) -> str:
+    """Isole la partie utile d'une trace : la ligne fautive et le message d'erreur.
+
+    Tronquer la fin d'une trace ferait disparaitre le message d'exception, qui est
+    justement la seule information dont le modele a besoin pour corriger. Sans lui, il
+    regenere le meme code a l'identique.
+    """
+    lines = [line for line in stderr.strip().splitlines() if line.strip()]
+    if not lines:
+        return "(aucune sortie d'erreur)"
+
+    # La derniere ligne non vide porte le type et le message de l'exception.
+    tail = lines[-6:]
+    head = lines[:4] if len(lines) > 10 else []
+    essentials = "\n".join([*head, *(["  ..."] if head else []), *tail])
+    return essentials[-max_chars:]
 
 
 def _describe_artifacts(execution: ExecutionResult) -> str:

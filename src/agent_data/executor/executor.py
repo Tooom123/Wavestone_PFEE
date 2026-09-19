@@ -28,6 +28,11 @@ Contraintes absolues :
   extraire une annee ou un mois.
 - Toute valeur ecrite dans un artefact doit etre un type Python natif (int, float, str) :
   convertis les types numpy avec int(), float() ou .item().
+- Avant tout calcul numerique global (corr(), mean(), une regression), restreins-toi aux
+  colonnes numeriques : `df.select_dtypes(include='number')`. Un `df.corr()` sur un
+  tableau contenant du texte echoue.
+- Pour un modele de ML, encode les colonnes categorielles (`pd.get_dummies`) et retire
+  les identifiants avant l'entrainement.
 - Tu ecris tes resultats dans /workspace/out/ sous forme de fichiers JSON d'artefacts.
 - Tu reponds UNIQUEMENT par un bloc de code Python, sans explication autour."""
 

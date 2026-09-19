@@ -37,42 +37,98 @@ Les deux etages sont testables et evaluables independamment.
 
 ## Stack
 
-uv · LangGraph · pandas + Pandera · Docker (sandbox) · DuckDB · SciPy · scikit-learn ·
-Plotly · Streamlit · Langfuse · ruff + pytest
+uv · LangGraph · Ollama (LLM local) · pandas + Pandera · Docker (sandbox) · DuckDB ·
+SciPy · scikit-learn · Plotly · Streamlit · Langfuse · ruff + pytest
+
+### Le modele tourne en local
+
+Le projet fonctionne par defaut avec **qwen2.5-coder:14b** servi par Ollama. Rien ne sort
+du poste : ni les donnees, ni meme leur profil.
+
+| Critere | Choix retenu |
+|---|---|
+| Modele | `qwen2.5-coder:14b` (~9 Go, quantisation Q4_K_M) |
+| Empreinte GPU | ~9,7 Go de VRAM — tient entierement sur une carte 12 Go |
+| Pourquoi celui-la | Meilleur rapport qualite/VRAM en generation de code a cette taille |
+| Alternative poste modeste | `qwen2.5-coder:7b` (~4,7 Go) : `LLM_MODEL=qwen2.5-coder:7b` |
+
+`qwen3-coder:30b` a ete ecarte : 18,6 Go, il deborde une carte 12 Go et bascule sur le CPU.
+Basculer vers une API distante ne demande que de changer `LLM_PROVIDER` dans `.env` — la
+decision reste ouverte cote Wavestone.
 
 ## Demarrage
 
-Prerequis : [uv](https://docs.astral.sh/uv/) et Docker.
+Un seul script installe tout (uv, dependances, Ollama et son modele, image du sandbox,
+jeux de donnees) :
 
 ```bash
-uv sync                  # installe les dependances
-cp .env.example .env     # puis renseigner les cles API
-uv run agent-data        # point d'entree CLI
+git clone <repo> && cd Wavestone_PFEE
+./scripts/setup.sh
+```
+
+Options utiles : `--skip-model` (ne telecharge pas les ~9 Go du modele), `--skip-data`,
+`--skip-docker`. Le script est idempotent : on peut le relancer sans risque.
+
+Verifier que tout est en place :
+
+```bash
+uv run agent-data check
+```
+
+### Utilisation
+
+```bash
+# Poser une question sur un jeu de donnees
+uv run agent-data ask "Quelles categories tirent la marge vers le bas ?" \
+    -d data/superstore/superstore.csv
+
+# Voir le profil d'un CSV : exactement ce que recoit le LLM
+uv run agent-data profile data/telco_churn/telco_churn.csv
+
+# Interface graphique
+uv run streamlit run src/agent_data/ui/app.py
 ```
 
 Qualite :
 
 ```bash
 uv run ruff check .
-uv run pytest
+uv run pytest          # les tests du sandbox exigent Docker, sinon ils sont ignores
 ```
 
 ## Structure
 
 ```
 src/agent_data/
-  profiling/   profilage des CSV -> DatasetProfile (seul objet envoye au LLM)
-  planner/     question metier + profil -> plan d'analyse
-  executor/    plan -> code Python
-  sandbox/     execution isolee du code genere (Docker)
-  critic/      relecture des resultats, correction, relance
-  rendering/   artefacts JSON -> restitution
-  graph.py     graphe LangGraph de l'etage 1
-  schemas.py   modeles Pydantic (contrats entre etages)
-data/          jeux de donnees locaux (non versionnes)
-scripts/       utilitaires (telechargement des datasets)
+  profiling/       profilage des CSV -> DatasetProfile (seul objet envoye au LLM)
+  planner/         question metier + profil -> plan d'analyse
+  executor/        plan -> code Python
+  sandbox/         execution isolee du code genere (Docker)
+  critic/          relecture des resultats, correction, relance
+  rendering/       etage 2 : artefacts JSON -> synthese et rapport
+  llm/             acces au modele (Ollama par defaut)
+  eval/            evaluation separee des deux etages
+  ui/app.py        interface Streamlit
+  graph.py         boucle agentique de l'etage 1
+  pipeline.py      enchainement des deux etages
+  schemas.py       modeles Pydantic (contrats entre etages)
+  config.py        configuration lue depuis .env
+docker/            image du sandbox et helpers injectes dedans
+data/              jeux de donnees locaux (non versionnes)
+scripts/           setup.sh (installation) et download_data.py
 tests/
 ```
+
+## Jeux de donnees
+
+Trois jeux couvrent les trois familles d'analyse du perimetre. `./scripts/setup.sh` les
+telecharge ; `uv run python scripts/download_data.py` aussi.
+
+| Dataset | Taille | Famille | Ce qu'il demontre |
+|---|---|---|---|
+| `telco_churn` | 7 043 x 21 | ML supervise | Classification sur une cible claire (`Churn`), facteurs de depart |
+| `superstore` | 8 399 x 21 | BI descriptive | Temps, geographie, categories, marge — le cas d'usage cite par Wavestone |
+| `personality` | 2 240 x 29 | Exploration | Segmentation et RFM, sans cible predefinie |
 
 ## Conventions
 
