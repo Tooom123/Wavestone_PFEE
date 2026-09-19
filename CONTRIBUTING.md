@@ -73,3 +73,13 @@ sandbox.
 
 Completer `DATASETS` dans `scripts/download_data.py`, puis documenter le jeu dans
 `data/README.md`. Aucun CSV ne doit etre commite.
+
+## Limites connues
+
+- Le modele local (14B) se trompe regulierement du premier coup : appel manquant a
+  `from agent_out import ...`, `df.corr()` sur des colonnes texte, encodage oublie avant
+  un modele de ML. La boucle de correction rattrape ces cas ; le prompt de
+  `executor/executor.py` les anticipe un par un. Ajouter une regle plutot que de
+  contourner le probleme dans le code.
+- Les runs qui impliquent du ML (telco_churn) sont nettement plus longs que les analyses
+  descriptives : compter plusieurs minutes.
