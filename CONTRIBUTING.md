@@ -93,5 +93,10 @@ Les helpers disponibles dans le sandbox :
 
 - Le modele local (14B) se trompe regulierement du premier coup. La boucle de correction
   rattrape ces cas ; les helpers ci-dessus suppriment les plus frequents a la racine.
+- **Le nombre d'iterations varie d'un run a l'autre** sur une meme question. Le plan, lui,
+  est reproductible a `LLM_TEMPERATURE=0` : la variabilite vient de la generation de code,
+  pas de la planification. Un run peut donc reussir en 2 iterations et le suivant en 5.
+  En tenir compte en evaluant : juger sur plusieurs runs, pas sur un seul.
+- Les cas ML (`telco_churn`) durent 2 a 3 minutes, les cas descriptifs moins d'une minute.
 - Les runs qui impliquent du ML (telco_churn) sont nettement plus longs que les analyses
   descriptives : compter plusieurs minutes.

@@ -155,6 +155,17 @@ uv run python scripts/run_eval.py --stage 1            # etage 1 uniquement
 Chaque cas declenche un run reel (LLM local + sandbox) : compter une a trois minutes par
 cas, davantage pour ceux qui impliquent du ML.
 
+Derniere execution complete : **24/24 controles reussis**.
+
+| Cas | Famille | Duree | Iterations | Artefacts |
+|---|---|---|---|---|
+| `churn_facteurs` | ML supervise | 134 s | 5 | 4 |
+| `ventes_qualite` | BI descriptive | 53 s | 1 | 5 |
+| `segments_clients` | Clustering | 103 s | 4 | 10 |
+
+Le nombre d'iterations varie d'un run a l'autre : la generation de code n'est pas
+deterministe, meme a temperature 0 (le plan, lui, l'est). Juger sur plusieurs runs.
+
 ## Jeux de donnees
 
 Trois jeux couvrent les trois familles d'analyse du perimetre. `./scripts/setup.sh` les
