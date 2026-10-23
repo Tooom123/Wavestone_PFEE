@@ -138,3 +138,19 @@ def test_meilleurs_artefacts_conserves_malgre_l_echec_final(
 
     assert state.errors, "le run doit signaler que le plafond est atteint"
     assert len(state.artifacts) == 1, "l'artefact de la premiere iteration doit survivre"
+
+
+def test_chaque_role_a_son_modele(csv_ventes: Path) -> None:
+    from agent_data.llm import OllamaClient
+
+    settings = Settings(
+        _env_file=None, llm_model="base", planner_model="gros-raisonneur", critic_model="petit"
+    )
+    stage = Stage1(settings=settings, sandbox=FakeSandbox([]))  # type: ignore[arg-type]
+    models = {role: c.model for role, c in stage.clients.items() if isinstance(c, OllamaClient)}
+    assert models == {
+        "planner": "gros-raisonneur",
+        "coder": "base",
+        "critic": "petit",
+        "synthesis": "base",
+    }

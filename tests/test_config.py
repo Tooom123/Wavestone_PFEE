@@ -26,3 +26,10 @@ def test_langfuse_desactive_sans_clefs() -> None:
     assert not Settings(_env_file=None).langfuse_enabled
     configured = Settings(_env_file=None, langfuse_public_key="a", langfuse_secret_key="b")
     assert configured.langfuse_enabled
+
+
+def test_un_modele_par_role_avec_repli_sur_le_defaut() -> None:
+    s = Settings(_env_file=None, llm_model="base", coder_model="coder-14b", critic_model="")
+    assert s.model_for("coder") == "coder-14b"
+    assert s.model_for("critic") == "base"  # vide : retombe sur le modele par defaut
+    assert s.model_for("planner") == "base"

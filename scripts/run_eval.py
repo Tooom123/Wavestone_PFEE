@@ -76,7 +76,7 @@ def main(argv: list[str] | None = None) -> int:
         if state.plan is not None and args.stage != 2:
             checks += [("etage1", r) for r in check_stage1(case, state.plan, state.artifacts)]
         if state.plan is not None and args.stage != 1:
-            synthesis = synthesize(state.plan, state.artifacts, client=stage1.client)
+            synthesis = synthesize(state.plan, state.artifacts, client=stage1.clients["synthesis"])
             checks += [("etage2", r) for r in check_stage2(case, state.artifacts, synthesis)]
 
         for stage, result in checks:
