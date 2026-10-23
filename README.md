@@ -157,6 +157,20 @@ Chaque role de l'agent peut etre servi par son propre modele (`PLANNER_MODEL`, `
 decharge les modeles a chaud : sur une carte de 12 Go, un seul gros modele tient a la fois, on
 paie donc un rechargement a chaque changement de role. Mesurer avant de choisir :
 
+Choix retenu, mesure sur les trois cas d'evaluation (memes entrees pour tous les modeles) :
+
+| Role | Modele | Ce qui a decide |
+|---|---|---|
+| Plan | `gemma4:e4b` | Plans les plus rigoureux (cite `Order Date`, hypotheses explicites) |
+| Code | `qwen2.5-coder:14b` | Specialiste du code ; a confirmer par `run_eval.py` |
+| Critique | `qwen2.5-coder:14b` | Verdicts justes en 3,6 s ; deja en VRAM apres le code, donc sans rechargement |
+| Reponse | `gemma4:e4b` | Seul francais fidele aux chiffres ; qwen-coder ecrit « 42,7 % des departements » et invente une marge 2012 par categorie, llama3.2 aussi |
+
+`llama3.2` (3B) rate un plan et un JSON de critique ; `qwen2.5:1.5b` refuse un bon resultat. Les
+controles automatiques sont trop grossiers pour les departager (12/12 presque partout) : la
+lecture des textes reste necessaire. Cout du changement de modele : ~11 s (qwen) a ~32 s
+(gemma) de chargement a froid.
+
 ```bash
 uv run python scripts/bench_models.py MODELE_A MODELE_B    # plan, critique, reponse
 uv run python scripts/run_eval.py                          # code : change CODER_MODEL puis relance
