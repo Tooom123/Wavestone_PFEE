@@ -37,7 +37,8 @@ function Idle() {
 
 /** Pourquoi l'essai est rejete, et ce que l'agent en fait : c'est la boucle de correction. */
 function reason(it: Iteration): string {
-  const issue = it.critique?.issues[0]?.split("\n").find((l) => l.trim() && !l.startsWith("Le code a echoue"));
+  // La derniere ligne d'une trace est l'exception ; les premieres sont souvent des avertissements.
+  const issue = it.critique?.issues[0]?.split("\n").filter((l) => l.trim()).at(-1)?.trim();
   const next = it.critique?.replan ? "replanification" : "correction du code";
   return `${issue ?? "résultat insuffisant"} → ${next}`;
 }
