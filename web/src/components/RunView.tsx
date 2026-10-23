@@ -26,7 +26,7 @@ function Idle() {
         l&apos;exécute, relit le résultat et se corrige.
       </p>
       <ol className="steps">
-        <li><strong>Profil</strong><span>Le modèle ne voit que le schéma et des statistiques agrégées, jamais les lignes.</span></li>
+        <li data-role="profile"><strong>Profil</strong><span>Le modèle ne voit que le schéma et des statistiques agrégées, jamais les lignes.</span></li>
         <li data-role="planner"><strong>Plan</strong><span>La question métier devient une question statistique explicite, avec ses hypothèses.</span></li>
         <li data-role="coder"><strong>Code</strong><span>Du pandas / scikit-learn réellement exécuté, dans un conteneur sans réseau.</span></li>
         <li data-role="critic"><strong>Critique</strong><span>Le résultat est relu ; en cas d&apos;échec, le code est corrigé.</span></li>
@@ -122,8 +122,11 @@ export function RunView({
       )}
 
       {run.profile && (
-        <section className="block">
-          <h3>Profilage</h3>
+        <section className="block" data-role="profile">
+          <h3>
+            Profilage
+            <RoleBadge role="profile" model="pandas" />
+          </h3>
           <p className="muted">
             {run.profile.map((d) => `${d.name} : ${d.rows.toLocaleString("fr-FR")} lignes, ${d.columns} colonnes`).join(" · ")}
           </p>
@@ -131,7 +134,7 @@ export function RunView({
       )}
 
       {run.plan && (
-        <section className="block">
+        <section className="block" data-role="planner">
           <h3>
             Plan d&apos;analyse
             {run.planModel && <RoleBadge role="planner" model={run.planModel} />}
@@ -166,7 +169,7 @@ export function RunView({
       )}
 
       {run.iterations.length > 0 && (
-        <section className="block">
+        <section className="block" data-role="coder">
           <h3>Génération et exécution</h3>
           {run.iterations.map((it, i) => (
             <IterationView

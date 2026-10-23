@@ -33,7 +33,7 @@ export function ReportView({ report, model }: { report: Report; model?: string }
   };
 
   return (
-    <article className="report">
+    <article className="report" data-role="synthesis">
       <header>
         <span className="eyebrow">Réponse</span>
         {model && <RoleBadge role="synthesis" model={model} />}

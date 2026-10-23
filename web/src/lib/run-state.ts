@@ -1,4 +1,5 @@
-import type { Plan, Report, Role, RunEvent } from "./types";
+import type { StepRole } from "@/components/RoleBadge";
+import type { Plan, Report, RunEvent } from "./types";
 
 export interface Iteration {
   n: number;
@@ -19,7 +20,7 @@ export interface RunState {
   replans: number;
   iterations: Iteration[];
   /** Etape en cours : ce que le modele est en train de faire. */
-  current?: { label: string; model: string; role?: Role };
+  current?: { label: string; model: string; role?: StepRole };
   criticModel?: string;
   synthesisModel?: string;
   report?: Report;
@@ -50,7 +51,7 @@ export function runReducer(state: RunState, action: Action): RunState {
 
   switch (e.kind) {
     case "start":
-      return { ...state, current: { label: "Profilage des données", model: "pandas" } };
+      return { ...state, current: { label: "Profilage des données", model: "pandas", role: "profile" } };
     case "profile":
       return { ...state, profile: e.datasets };
     case "stage":

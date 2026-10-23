@@ -14,10 +14,11 @@
   --ko-soft: #f6e0db;
   --warn-soft: #f5ecd0;
   /* Un agent = une couleur, partout dans l'interface. Teintes distinctes et sans lien avec l'accent. */
-  --role-planner: #2f6bb3;
-  --role-coder: #a8620a;
-  --role-critic: #8446b0;
-  --role-synthesis: #b0356a;
+  --role-profile: #12997a;
+  --role-planner: #2563eb;
+  --role-coder: #e8710a;
+  --role-critic: #8e44d6;
+  --role-synthesis: #d6336c;
   --radius: 10px;
   --mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, Consolas, monospace;
   color-scheme: light dark;
@@ -39,10 +40,11 @@
     --ko: #ec8070;
     --ko-soft: #371f1b;
     --warn-soft: #332d19;
-    --role-planner: #7db0ec;
-    --role-coder: #e3a954;
-    --role-critic: #c79be6;
-    --role-synthesis: #ee8fb2;
+    --role-profile: #4fd1a1;
+    --role-planner: #6ea0ff;
+    --role-coder: #ffa24d;
+    --role-critic: #c08bf0;
+    --role-synthesis: #ff7aa8;
   }
 }
 
@@ -150,7 +152,7 @@ textarea { resize: vertical; }
   list-style: none; background: var(--surface); border: 1px solid var(--line);
   border-radius: 10px; box-shadow: 0 8px 24px rgb(0 0 0 / 0.12); min-width: 330px;
 }
-.models li { display: grid; grid-template-columns: 104px 1fr 12px; gap: 8px; align-items: center; padding: 3px 0; }
+.models li { display: grid; grid-template-columns: 112px 1fr 12px; gap: 8px; align-items: center; padding: 3px 0; }
 
 .settings {
   max-width: 520px; margin: 16px 24px 0 auto; padding: 16px;
@@ -268,6 +270,7 @@ tr:last-child td { border-bottom: 0; }
 }
 
 /* --- agents ------------------------------------------------------------------ */
+[data-role="profile"] { --c: var(--role-profile); }
 [data-role="planner"] { --c: var(--role-planner); }
 [data-role="coder"] { --c: var(--role-coder); }
 [data-role="critic"] { --c: var(--role-critic); }
@@ -278,17 +281,23 @@ tr:last-child td { border-bottom: 0; }
   padding: 2px 9px 2px 7px; border-radius: 99px; margin-left: 6px;
   font-size: 12px; font-weight: 600; line-height: 1.5;
   color: var(--c);
-  background: color-mix(in srgb, var(--c) 14%, transparent);
-  border: 1px solid color-mix(in srgb, var(--c) 35%, transparent);
+  background: color-mix(in srgb, var(--c) 18%, transparent);
+  border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
 }
 .role i { width: 8px; height: 8px; border-radius: 50%; background: var(--c); }
 .role code { font-size: 11.5px; font-weight: 500; color: var(--muted); }
 .models .role { margin-left: 0; justify-self: start; }
 
-.working[data-role] { border-left: 4px solid var(--c); background: color-mix(in srgb, var(--c) 10%, var(--surface)); }
+.working[data-role] { border-left: 5px solid var(--c); background: color-mix(in srgb, var(--c) 10%, var(--surface)); }
 .working[data-role] .spinner { border-color: var(--c); border-right-color: transparent; }
 
+.steps li[data-role] { border-left: 5px solid var(--c); background: color-mix(in srgb, var(--c) 8%, var(--surface)); }
 .steps li[data-role] strong { color: var(--c); }
 .steps li[data-role]::before { color: var(--c); }
+
+/* chaque etape d'un run porte le liseré de sa couleur */
+.block[data-role] { border-top: 0; border-left: 5px solid var(--c); padding: 2px 0 2px 16px; }
+.block[data-role] > h3 { color: var(--ink); }
+.report[data-role] { border-top: 4px solid var(--c); }
 .critique .role { margin-left: 0; }
 .report > header .role { margin-left: 8px; }
