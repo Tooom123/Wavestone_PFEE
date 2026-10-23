@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import type { Iteration, RunState } from "@/lib/run-state";
 import { ReportView } from "./ReportView";
+import { RoleBadge } from "./RoleBadge";
 
 function useElapsed(run: RunState) {
   const [now, setNow] = useState(() => Date.now());
@@ -25,11 +26,11 @@ function Idle() {
         l&apos;exécute, relit le résultat et se corrige.
       </p>
       <ol className="steps">
-        <li><strong>Profil</strong><span>Le modèle ne voit que le schéma et des statistiques agrégées, jamais les lignes.</span></li>
-        <li><strong>Plan</strong><span>La question métier devient une question statistique explicite, avec ses hypothèses.</span></li>
-        <li><strong>Code</strong><span>Du pandas / scikit-learn réellement exécuté, dans un conteneur sans réseau.</span></li>
-        <li><strong>Critique</strong><span>Le résultat est relu ; en cas d&apos;échec, le code est corrigé.</span></li>
-        <li><strong>Réponse</strong><span>Les résultats chiffrés sont traduits en langage de décideur.</span></li>
+        <li data-role="profile"><strong>Profil</strong><span>Le modèle ne voit que le schéma et des statistiques agrégées, jamais les lignes.</span></li>
+        <li data-role="planner"><strong>Plan</strong><span>La question métier devient une question statistique explicite, avec ses hypothèses.</span></li>
+        <li data-role="coder"><strong>Code</strong><span>Du pandas / scikit-learn réellement exécuté, dans un conteneur sans réseau.</span></li>
+        <li data-role="critic"><strong>Critique</strong><span>Le résultat est relu ; en cas d&apos;échec, le code est corrigé.</span></li>
+        <li data-role="synthesis"><strong>Réponse</strong><span>Les résultats chiffrés sont traduits en langage de décideur.</span></li>
       </ol>
     </div>
   );
@@ -43,7 +44,17 @@ function reason(it: Iteration): string {
   return `${issue ?? "résultat insuffisant"} → ${next}`;
 }
 
-function IterationView({ it, isLast, running }: { it: Iteration; isLast: boolean; running: boolean }) {
+function IterationView({
+  it,
+  isLast,
+  running,
+  criticModel,
+}: {
+  it: Iteration;
+  isLast: boolean;
+  running: boolean;
+  criticModel?: string;
+}) {
   const status = it.execution?.status;
   return (
     <details className="iteration" open={isLast}>
@@ -52,11 +63,10 @@ function IterationView({ it, isLast, running }: { it: Iteration; isLast: boolean
           {status === "success" ? "exécuté" : status === "timeout" ? "timeout" : status ? "échec" : "en cours"}
         </span>
         Essai {it.n}
-        <span className="badge">{it.model}</span>
+        <RoleBadge role="coder" model={it.model} />
+        {it.critique && !it.critique.satisfactory && <span className="why">{reason(it)}</span>}
         {it.execution && <span className="muted"> · {it.execution.seconds} s · {it.execution.artifacts} artefact(s)</span>}
-        {it.critique && !it.critique.satisfactory && (
-          <span className="why">{reason(it)}</span>
-        )}
+        
       </summary>
       {it.code && (
         <details className="code">
@@ -65,7 +75,12 @@ function IterationView({ it, isLast, running }: { it: Iteration; isLast: boolean
         </details>
       )}
       {it.execution?.error && <pre className="error-trace">{it.execution.error}</pre>}
-      {it.critique?.satisfactory && <p className="critique ok">Critique : résultat accepté.</p>}
+      {it.critique && (
+        <p className={`critique ${it.critique.satisfactory ? "ok" : "ko"}`}>
+          <RoleBadge role="critic" model={criticModel} />{" "}
+          {it.critique.satisfactory ? "Résultat accepté." : "Résultat rejeté : correction demandée au codeur."}
+        </p>
+      )}
       {!it.critique && running && isLast && <p className="muted">…</p>}
     </details>
   );
@@ -95,16 +110,23 @@ export function RunView({
       </div>
 
       {run.current && (
-        <div className="working" role="status">
+        <div className="working" role="status" data-role={run.current.role}>
           <span className="spinner" aria-hidden />
           <span>{run.current.label}</span>
-          <span className="badge">{run.current.model}</span>
+          {run.current.role ? (
+            <RoleBadge role={run.current.role} model={run.current.model} />
+          ) : (
+            <span className="badge">{run.current.model}</span>
+          )}
         </div>
       )}
 
       {run.profile && (
-        <section className="block">
-          <h3>Profilage</h3>
+        <section className="block" data-role="profile">
+          <h3>
+            Profilage
+            <RoleBadge role="profile" model="pandas" />
+          </h3>
           <p className="muted">
             {run.profile.map((d) => `${d.name} : ${d.rows.toLocaleString("fr-FR")} lignes, ${d.columns} colonnes`).join(" · ")}
           </p>
@@ -112,10 +134,10 @@ export function RunView({
       )}
 
       {run.plan && (
-        <section className="block">
+        <section className="block" data-role="planner">
           <h3>
             Plan d&apos;analyse
-            {run.planModel && <span className="badge">{run.planModel}</span>}
+            {run.planModel && <RoleBadge role="planner" model={run.planModel} />}
             {run.replans > 0 && <span className="badge warn">replanifié ×{run.replans}</span>}
           </h3>
           <p className="restated">{run.plan.restated_question}</p>
@@ -147,10 +169,16 @@ export function RunView({
       )}
 
       {run.iterations.length > 0 && (
-        <section className="block">
+        <section className="block" data-role="coder">
           <h3>Génération et exécution</h3>
           {run.iterations.map((it, i) => (
-            <IterationView key={it.n} it={it} isLast={i === run.iterations.length - 1} running={running} />
+            <IterationView
+              key={it.n}
+              it={it}
+              isLast={i === run.iterations.length - 1}
+              running={running}
+              criticModel={run.criticModel}
+            />
           ))}
         </section>
       )}

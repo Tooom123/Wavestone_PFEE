@@ -1,11 +1,8 @@
 import type { Health, Role } from "@/lib/types";
+import { RoleBadge } from "./RoleBadge";
 
-const ROLE_LABELS: Record<Role, string> = {
-  planner: "Plan",
-  coder: "Code",
-  critic: "Critique",
-  synthesis: "Réponse",
-};
+/** Les quatre agents LLM : le profilage n'a pas de modele. */
+const AGENTS: Role[] = ["planner", "coder", "critic", "synthesis"];
 
 function Dot({ ok }: { ok: boolean }) {
   return <span className={`dot ${ok ? "ok" : "ko"}`} aria-label={ok ? "disponible" : "indisponible"} />;
@@ -33,9 +30,9 @@ export function StatusBar({
           <details className="chip models">
             <summary>Modèles par tâche</summary>
             <ul>
-              {(Object.keys(ROLE_LABELS) as Role[]).map((role) => (
+              {AGENTS.map((role) => (
                 <li key={role}>
-                  <span>{ROLE_LABELS[role]}</span>
+                  <RoleBadge role={role} />
                   <code>{health.models[role].name}</code>
                   <Dot ok={health.models[role].installed} />
                 </li>
