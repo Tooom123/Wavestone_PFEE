@@ -1,6 +1,7 @@
 import type { Artifact, Report } from "@/lib/types";
 import { DataTable } from "./DataTable";
 import { Plot } from "./Plot";
+import { RoleBadge } from "./RoleBadge";
 
 function ArtifactView({ artifact }: { artifact: Artifact }) {
   const p = artifact.payload;
@@ -35,7 +36,7 @@ export function ReportView({ report, model }: { report: Report; model?: string }
     <article className="report">
       <header>
         <span className="eyebrow">Réponse</span>
-        {model && <span className="badge">rédigée par {model}</span>}
+        {model && <RoleBadge role="synthesis" model={model} />}
       </header>
       <div className="answer">
         {report.synthesis.split(/\n{2,}/).map((para, i) => (

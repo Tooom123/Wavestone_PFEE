@@ -1,11 +1,5 @@
 import type { Health, Role } from "@/lib/types";
-
-const ROLE_LABELS: Record<Role, string> = {
-  planner: "Plan",
-  coder: "Code",
-  critic: "Critique",
-  synthesis: "Réponse",
-};
+import { ROLE_LABELS, RoleBadge } from "./RoleBadge";
 
 function Dot({ ok }: { ok: boolean }) {
   return <span className={`dot ${ok ? "ok" : "ko"}`} aria-label={ok ? "disponible" : "indisponible"} />;
@@ -35,7 +29,7 @@ export function StatusBar({
             <ul>
               {(Object.keys(ROLE_LABELS) as Role[]).map((role) => (
                 <li key={role}>
-                  <span>{ROLE_LABELS[role]}</span>
+                  <RoleBadge role={role} />
                   <code>{health.models[role].name}</code>
                   <Dot ok={health.models[role].installed} />
                 </li>

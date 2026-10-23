@@ -1,4 +1,4 @@
-import type { Plan, Report, RunEvent } from "./types";
+import type { Plan, Report, Role, RunEvent } from "./types";
 
 export interface Iteration {
   n: number;
@@ -19,7 +19,8 @@ export interface RunState {
   replans: number;
   iterations: Iteration[];
   /** Etape en cours : ce que le modele est en train de faire. */
-  current?: { label: string; model: string };
+  current?: { label: string; model: string; role?: Role };
+  criticModel?: string;
   synthesisModel?: string;
   report?: Report;
   warnings: string[];
@@ -29,6 +30,8 @@ export interface RunState {
 export const initialRun: RunState = { phase: "idle", replans: 0, iterations: [], warnings: [] };
 
 export type Action = { type: "event"; event: RunEvent } | { type: "reset" } | { type: "begin" } | { type: "fail"; message: string };
+
+const ROLE_OF = { planner: "planner", critic: "critic", synthesis: "synthesis" } as const;
 
 const LABELS = {
   planner: "Planification de l'analyse",
@@ -53,8 +56,9 @@ export function runReducer(state: RunState, action: Action): RunState {
     case "stage":
       return {
         ...state,
-        current: { label: LABELS[e.name], model: e.model },
+        current: { label: LABELS[e.name], model: e.model, role: ROLE_OF[e.name] },
         ...(e.name === "planner" ? { planModel: e.model } : {}),
+        ...(e.name === "critic" ? { criticModel: e.model } : {}),
         ...(e.name === "synthesis" ? { synthesisModel: e.model } : {}),
       };
     case "plan":
@@ -65,7 +69,7 @@ export function runReducer(state: RunState, action: Action): RunState {
       return {
         ...state,
         phase: "running",
-        current: { label: `Génération du code (essai ${e.n}/${e.max})`, model: e.model },
+        current: { label: `Génération du code (essai ${e.n}/${e.max})`, model: e.model, role: "coder" },
         iterations: [...state.iterations, { n: e.n, max: e.max, model: e.model }],
       };
     case "code":
