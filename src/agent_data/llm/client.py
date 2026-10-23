@@ -12,7 +12,7 @@ import urllib.error
 import urllib.request
 from typing import Protocol
 
-from agent_data.config import Settings, get_settings
+from agent_data.config import Role, Settings, get_settings
 
 
 class LLMError(RuntimeError):
@@ -34,8 +34,9 @@ class OllamaClient:
     unique point d'entree, et le format de requete d'Ollama est stable.
     """
 
-    def __init__(self, settings: Settings | None = None) -> None:
+    def __init__(self, settings: Settings | None = None, *, model: str | None = None) -> None:
         self.settings = settings or get_settings()
+        self.model = model or self.settings.llm_model
 
     def is_available(self) -> bool:
         """Vrai si le serveur Ollama repond."""
@@ -61,9 +62,10 @@ class OllamaClient:
     def complete(self, prompt: str, *, system: str = "") -> str:
         """Interroge le modele et retourne sa reponse textuelle."""
         body = {
-            "model": self.settings.llm_model,
+            "model": self.model,
             "prompt": prompt,
             "stream": False,
+            "keep_alive": self.settings.llm_keep_alive,
             "options": {"temperature": self.settings.llm_temperature},
         }
         if system:
@@ -93,11 +95,11 @@ class OllamaClient:
         return str(payload.get("response", "")).strip()
 
 
-def get_client(settings: Settings | None = None) -> LLMClient:
-    """Retourne le client correspondant au fournisseur configure."""
+def get_client(settings: Settings | None = None, role: Role | None = None) -> LLMClient:
+    """Retourne le client du fournisseur configure, branche sur le modele du `role`."""
     settings = settings or get_settings()
     if settings.llm_provider == "ollama":
-        return OllamaClient(settings)
+        return OllamaClient(settings, model=settings.model_for(role) if role else None)
     raise LLMError(
         f"Fournisseur {settings.llm_provider!r} non encore implemente. "
         "Le projet tourne en local par defaut (LLM_PROVIDER=ollama)."

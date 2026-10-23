@@ -31,12 +31,22 @@ from agent_data.schemas import AgentState, ExecutionStatus
 
 @dataclass
 class RunTrace:
-    """Journal d'un run : ce qui s'est passe a chaque iteration."""
+    """Journal d'un run : ce qui s'est passe a chaque iteration.
+
+    `events` est le journal lisible (console, expander Streamlit). `listener` recoit en plus
+    des evenements structures, que l'API relaie au front pour afficher le run en direct.
+    """
 
     events: list[str] = field(default_factory=list)
+    listener: Callable[[dict], None] | None = None
 
     def add(self, message: str) -> None:
         self.events.append(message)
+
+    def emit(self, kind: str, **data: object) -> None:
+        """Signale un evenement structure a l'ecoute eventuelle."""
+        if self.listener is not None:
+            self.listener({"kind": kind, **data})
 
 
 PlanApproval = Callable[[AgentState], bool]
@@ -58,7 +68,13 @@ class Stage1:
         sandbox: DockerSandbox | None = None,
     ) -> None:
         self.settings = settings or get_settings()
-        self.client = client or get_client(self.settings)
+        # Un client par role : chaque tache peut etre servie par un modele different. Un
+        # client injecte (tests) sert tous les roles.
+        self.clients: dict[str, LLMClient] = {
+            role: client or get_client(self.settings, role)
+            for role in ("planner", "coder", "critic", "synthesis")
+        }
+        self.client = self.clients["coder"]
         self.sandbox = sandbox or DockerSandbox(self.settings)
 
     def run(
@@ -80,32 +96,50 @@ class Stage1:
             max_iterations=self.settings.max_iterations,
         )
         trace.add(f"profilage : {len(state.profiles)} dataset(s)")
+        trace.emit(
+            "profile",
+            datasets=[
+                {"name": p.name, "rows": p.row_count, "columns": len(p.columns)}
+                for p in state.profiles
+            ],
+        )
         known_columns = {c.name for p in state.profiles for c in p.columns}
 
-        state.plan = plan_analysis(question, state.profiles, client=self.client)
+        trace.emit("stage", name="planner", model=self.settings.model_for("planner"))
+        state.plan = plan_analysis(question, state.profiles, client=self.clients["planner"])
         trace.add(f"plan : {len(state.plan.steps)} etape(s) — {state.plan.restated_question}")
+        trace.emit("plan", plan=state.plan.model_dump(mode="json"))
 
-        if self.settings.human_validation and not approve(state):
-            state.errors.append("Plan refuse par l'utilisateur.")
-            trace.add("plan refuse : arret")
-            return state
+        if self.settings.human_validation:
+            trace.emit("awaiting_approval")
+            if not approve(state):
+                state.errors.append("Plan refuse par l'utilisateur.")
+                trace.add("plan refuse : arret")
+                return state
 
         previous_error: str | None = None
         best_artifacts: list = []
         while not state.budget_exhausted:
             state.iteration += 1
             trace.add(f"--- iteration {state.iteration}/{state.max_iterations}")
+            trace.emit(
+                "iteration",
+                n=state.iteration,
+                max=state.max_iterations,
+                model=self.settings.model_for("coder"),
+            )
 
             assert state.plan is not None
             state.code = generate_code(
                 state.plan,
                 state.profiles,
                 datasets,
-                client=self.client,
+                client=self.clients["coder"],
                 critique=state.critique,
                 previous_code=state.code,
                 previous_error=previous_error,
             )
+            trace.emit("code", code=state.code)
             state.execution = self.sandbox.run(state.code, datasets=datasets)
             trace.add(
                 f"execution : {state.execution.status.value} "
@@ -120,11 +154,28 @@ class Stage1:
                 if state.execution.status is not ExecutionStatus.SUCCESS
                 else None
             )
+            trace.emit(
+                "execution",
+                status=state.execution.status.value,
+                artifacts=len(state.execution.artifacts),
+                seconds=round(state.execution.duration_seconds, 1),
+                error=previous_error,
+            )
             if len(state.execution.artifacts) > len(best_artifacts):
                 best_artifacts = list(state.execution.artifacts)
 
+            trace.emit("stage", name="critic", model=self.settings.model_for("critic"))
             state.critique = review(
-                state.plan, state.execution, client=self.client, known_columns=known_columns
+                state.plan,
+                state.execution,
+                client=self.clients["critic"],
+                known_columns=known_columns,
+            )
+            trace.emit(
+                "critique",
+                satisfactory=state.critique.is_satisfactory,
+                issues=state.critique.issues,
+                replan=state.critique.replan,
             )
 
             if state.critique.is_satisfactory:
@@ -134,8 +185,9 @@ class Stage1:
 
             trace.add(f"critique : {'; '.join(state.critique.issues)[:200]}")
             if state.critique.replan:
-                state.plan = plan_analysis(question, state.profiles, client=self.client)
+                state.plan = plan_analysis(question, state.profiles, client=self.clients["planner"])
                 trace.add("replanification")
+                trace.emit("plan", plan=state.plan.model_dump(mode="json"), replanned=True)
 
         # Budget epuise : on rend le meilleur resultat obtenu, pas celui de la derniere
         # iteration — une tentative tardive peut avoir echoue alors qu'une precedente

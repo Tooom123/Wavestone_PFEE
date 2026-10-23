@@ -3,6 +3,7 @@
 uv run agent-data check                       # etat du systeme
 uv run agent-data profile data/**/*.csv       # profil d'un dataset
 uv run agent-data ask "..." -d data/x.csv     # analyse complete
+uv run agent-data serve                       # API du front web
 """
 
 from __future__ import annotations
@@ -108,6 +109,27 @@ def _cmd_ask(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_serve(args: argparse.Namespace) -> int:
+    """Demarre l'API de demonstration consommee par le front web."""
+    import secrets
+
+    import uvicorn
+
+    settings = get_settings()
+    if args.public and not settings.api_token:
+        # Une API qui genere et execute du code ne s'expose jamais sans jeton.
+        token = secrets.token_urlsafe(24)
+        import os
+
+        os.environ["API_TOKEN"] = token
+        get_settings.cache_clear()
+        print(f"Jeton d'acces genere (a saisir dans le front) : {token}\n")
+    uvicorn.run(
+        "agent_data.api:create_app", factory=True, host=args.host, port=args.port, log_level="info"
+    )
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="agent-data", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -126,6 +148,16 @@ def build_parser() -> argparse.ArgumentParser:
     ask.add_argument("-o", "--output", help="Ecrit le rapport JSON dans ce fichier")
     ask.add_argument("-v", "--verbose", action="store_true", help="Affiche le journal du run")
     ask.set_defaults(func=_cmd_ask)
+
+    serve = sub.add_parser("serve", help="Demarre l'API du front web")
+    serve.add_argument("--host", default="127.0.0.1")
+    serve.add_argument("--port", type=int, default=8000)
+    serve.add_argument(
+        "--public",
+        action="store_true",
+        help="Prevu pour etre expose (tunnel) : genere un jeton si aucun n'est configure",
+    )
+    serve.set_defaults(func=_cmd_serve)
 
     return parser
 

@@ -118,6 +118,64 @@ uv run ruff check .
 uv run pytest          # les tests du sandbox exigent Docker, sinon ils sont ignores
 ```
 
+## Demonstration en ligne
+
+L'agent ne peut pas tourner sur Vercel : il lui faut un GPU, Docker et des runs de plusieurs
+minutes, quand le serverless n'offre ni l'un ni l'autre. Le montage retenu separe donc
+l'interface du cerveau :
+
+```
+navigateur ──► front Next.js (Vercel) ──► tunnel HTTPS ──► API FastAPI ──► Ollama + sandbox Docker
+                       web/                cloudflared      (ce poste)         (donnees et modeles)
+```
+
+Rien d'autre que du texte ne transite par Vercel : les donnees, les modeles et le code genere
+restent sur le poste de l'equipe, ce qui preserve l'isolation des donnees. L'API exige un
+jeton, ne sert que les jeux de `data/` (jamais un chemin fourni par le client) et n'accepte
+qu'un run a la fois, la carte graphique n'en portant pas deux.
+
+```bash
+# Poste qui porte l'agent : API + tunnel, affiche le lien a ouvrir
+./scripts/demo.sh https://<votre-projet>.vercel.app
+
+# Developpement local, sans tunnel
+uv run agent-data serve                    # API sur :8000
+cd web && npm install && npm run dev       # front sur :3000
+```
+
+Le lien affiche porte l'adresse du tunnel et le jeton dans son fragment (`#api=...&token=...`),
+qui n'est jamais envoye a un serveur. L'URL d'un tunnel gratuit change a chaque lancement :
+le front la memorise et se reconfigure via le bouton « Connexion ».
+
+Deploiement du front : importer le depot dans Vercel avec **Root Directory = `web`**. Aucune
+variable d'environnement n'est requise.
+
+### Un modele par tache
+
+Chaque role de l'agent peut etre servi par son propre modele (`PLANNER_MODEL`, `CODER_MODEL`,
+`CRITIC_MODEL`, `SYNTHESIS_MODEL` dans `.env`, `LLM_MODEL` par defaut). Ollama charge et
+decharge les modeles a chaud : sur une carte de 12 Go, un seul gros modele tient a la fois, on
+paie donc un rechargement a chaque changement de role. Mesurer avant de choisir :
+
+Choix retenu, mesure sur les trois cas d'evaluation (memes entrees pour tous les modeles) :
+
+| Role | Modele | Ce qui a decide |
+|---|---|---|
+| Plan | `gemma4:e4b` | Plans les plus rigoureux (cite `Order Date`, hypotheses explicites) |
+| Code | `qwen2.5-coder:14b` | Specialiste du code ; a confirmer par `run_eval.py` |
+| Critique | `qwen2.5-coder:14b` | Verdicts justes en 3,6 s ; deja en VRAM apres le code, donc sans rechargement |
+| Reponse | `gemma4:e4b` | Seul francais fidele aux chiffres ; qwen-coder ecrit « 42,7 % des departements » et invente une marge 2012 par categorie, llama3.2 aussi |
+
+`llama3.2` (3B) rate un plan et un JSON de critique ; `qwen2.5:1.5b` refuse un bon resultat. Les
+controles automatiques sont trop grossiers pour les departager (12/12 presque partout) : la
+lecture des textes reste necessaire. Cout du changement de modele : ~11 s (qwen) a ~32 s
+(gemma) de chargement a froid.
+
+```bash
+uv run python scripts/bench_models.py MODELE_A MODELE_B    # plan, critique, reponse
+uv run python scripts/run_eval.py                          # code : change CODER_MODEL puis relance
+```
+
 ## Structure
 
 ```
@@ -130,14 +188,16 @@ src/agent_data/
   rendering/       etage 2 : artefacts JSON -> synthese et rapport
   llm/             acces au modele (Ollama par defaut)
   eval/            evaluation separee des deux etages
-  ui/app.py        interface Streamlit
+  ui/app.py        interface Streamlit (developpement)
+  api/             API FastAPI : streaming des runs vers le front web
   graph.py         boucle agentique de l'etage 1
   pipeline.py      enchainement des deux etages
   schemas.py       modeles Pydantic (contrats entre etages)
   config.py        configuration lue depuis .env
+web/               front Next.js (deploye sur Vercel)
 docker/            image du sandbox et helpers injectes dedans
 data/              jeux de donnees locaux (non versionnes)
-scripts/           setup.sh (installation) et download_data.py
+scripts/           setup.sh, download_data.py, run_eval.py, bench_models.py, demo.sh
 tests/
 ```
 
@@ -155,6 +215,17 @@ uv run python scripts/run_eval.py --stage 1            # etage 1 uniquement
 Chaque cas declenche un run reel (LLM local + sandbox) : compter une a trois minutes par
 cas, davantage pour ceux qui impliquent du ML.
 
+Derniere execution complete : **24/24 controles reussis**.
+
+| Cas | Famille | Duree | Iterations | Artefacts |
+|---|---|---|---|---|
+| `churn_facteurs` | ML supervise | 134 s | 5 | 4 |
+| `ventes_qualite` | BI descriptive | 53 s | 1 | 5 |
+| `segments_clients` | Clustering | 103 s | 4 | 10 |
+
+Le nombre d'iterations varie d'un run a l'autre : la generation de code n'est pas
+deterministe, meme a temperature 0 (le plan, lui, l'est). Juger sur plusieurs runs.
+
 ## Jeux de donnees
 
 Trois jeux couvrent les trois familles d'analyse du perimetre. `./scripts/setup.sh` les
@@ -169,6 +240,6 @@ telecharge ; `uv run python scripts/download_data.py` aussi.
 ## Conventions
 
 - **uv** partout, jamais de `pip install` direct. `pyproject.toml` et `uv.lock` versionnes.
-- Branches : `main` (protegee) et `dev`. Toute feature -> branche -> PR vers `dev`.
+- Branches : `main` (protegee) et `develop`. Toute feature -> `feature/...` -> PR vers `develop`, avec revue de code.
 - CI sur chaque PR : `uv sync` -> `ruff check` -> `pytest`.
 - **Aucun CSV brut versionne.** Aucune cle API dans le depot.

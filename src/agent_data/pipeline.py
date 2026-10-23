@@ -28,5 +28,7 @@ def analyze(
     if state.plan is None:
         raise RuntimeError("Aucun plan n'a pu etre produit pour cette question.")
 
-    synthesis = synthesize(state.plan, state.artifacts, client=stage1.client)
+    if trace is not None:
+        trace.emit("stage", name="synthesis", model=stage1.settings.model_for("synthesis"))
+    synthesis = synthesize(state.plan, state.artifacts, client=stage1.clients["synthesis"])
     return Report.build(state.plan, state.artifacts, synthesis), state
