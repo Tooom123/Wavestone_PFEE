@@ -184,7 +184,7 @@ class DockerSandbox:
             str(self.settings.sandbox_cpus),
             # /tmp en tmpfs : pandas a besoin d'ecrire quelque part, sans persistance.
             "--tmpfs",
-            "/tmp:rw,size=256m,noexec",
+            "/tmp:rw,size=256m,noexec",  # nosec B108 - chemin dans le conteneur, pas sur l'hote
             "-v",
             f"{workdir / 'code.py'}:/workspace/code.py:ro",
             "-v",

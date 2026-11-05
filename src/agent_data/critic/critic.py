@@ -210,7 +210,7 @@ def _describe_artifacts(execution: ExecutionResult) -> str:
     lines = []
     for art in execution.artifacts:
         payload = art.payload
-        detail = payload.kind
+        detail: str = payload.kind
         if payload.kind == "table":
             detail = f"table {len(payload.rows)}x{len(payload.columns)} {payload.columns}"
         elif payload.kind == "finding":

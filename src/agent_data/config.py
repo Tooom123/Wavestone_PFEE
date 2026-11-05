@@ -87,6 +87,14 @@ class Settings(BaseSettings):
         """Modele a utiliser pour `role`, ou le modele par defaut."""
         return getattr(self, f"{role}_model") or self.llm_model
 
+    @field_validator("llm_base_url")
+    @classmethod
+    def _http_only(cls, v: str) -> str:
+        # L'URL part dans urllib : un schema file:// ou ftp:// lirait autre chose qu'un LLM.
+        if not v.startswith(("http://", "https://")):
+            raise ValueError(f"llm_base_url doit commencer par http:// ou https://, recu : {v!r}")
+        return v
+
     @property
     def is_local_llm(self) -> bool:
         """Vrai quand aucun appel ne sort du poste."""

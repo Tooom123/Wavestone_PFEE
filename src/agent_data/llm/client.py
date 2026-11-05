@@ -41,7 +41,7 @@ class OllamaClient:
     def is_available(self) -> bool:
         """Vrai si le serveur Ollama repond."""
         try:
-            with urllib.request.urlopen(  # noqa: S310
+            with urllib.request.urlopen(  # noqa: S310  # nosec B310 - schema http(s) valide par Settings
                 f"{self.settings.llm_base_url}/api/version", timeout=5
             ) as response:
                 return response.status == 200
@@ -51,7 +51,7 @@ class OllamaClient:
     def installed_models(self) -> list[str]:
         """Liste les modeles presents sur le serveur."""
         try:
-            with urllib.request.urlopen(  # noqa: S310
+            with urllib.request.urlopen(  # noqa: S310  # nosec B310 - schema http(s) valide par Settings
                 f"{self.settings.llm_base_url}/api/tags", timeout=10
             ) as response:
                 payload = json.loads(response.read())
@@ -71,14 +71,14 @@ class OllamaClient:
         if system:
             body["system"] = system
 
-        request = urllib.request.Request(  # noqa: S310
+        request = urllib.request.Request(  # noqa: S310  # nosec B310 - schema http(s) valide par Settings
             f"{self.settings.llm_base_url}/api/generate",
             data=json.dumps(body).encode("utf-8"),
             headers={"Content-Type": "application/json"},
             method="POST",
         )
         try:
-            with urllib.request.urlopen(  # noqa: S310
+            with urllib.request.urlopen(  # noqa: S310  # nosec B310 - schema http(s) valide par Settings
                 request, timeout=self.settings.llm_timeout_seconds
             ) as response:
                 payload = json.loads(response.read())
