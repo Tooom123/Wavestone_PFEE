@@ -34,7 +34,7 @@ CATALOG: list[GpuSpec] = [
         504.2,
         220,
         "poste",
-        "Lancement : 599 $ / 659 € TTC (prix actuels a verifier : le marche a monte en 2026)",
+        "659 € TTC au lancement",
     ),
     GpuSpec(
         "rtx4090",
@@ -44,7 +44,7 @@ CATALOG: list[GpuSpec] = [
         1008.0,
         450,
         "poste",
-        "Prix actuel non verifie",
+        "Prix à vérifier",
     ),
     GpuSpec(
         "rtx5090",
@@ -54,7 +54,7 @@ CATALOG: list[GpuSpec] = [
         1792.0,
         575,
         "poste",
-        "Prix actuel non verifie (forte hausse signalee en 2026)",
+        "Prix à vérifier",
     ),
     GpuSpec(
         "l40s",
@@ -64,9 +64,9 @@ CATALOG: list[GpuSpec] = [
         864.0,
         350,
         "datacenter",
-        "Location cloud",
+        "Location",
         1.40,
-        "Scaleway, 1x L40S, € HT/h (grille officielle)",
+        "Scaleway, 1 L40S, € HT/h (grille officielle)",
     ),
     GpuSpec(
         "a100",
@@ -76,7 +76,7 @@ CATALOG: list[GpuSpec] = [
         2039.0,
         400,
         "datacenter",
-        "Prix non verifie",
+        "Prix à vérifier",
     ),
     GpuSpec(
         "h100",
@@ -86,9 +86,9 @@ CATALOG: list[GpuSpec] = [
         3350.0,
         700,
         "datacenter",
-        "Location cloud",
+        "Location",
         2.73,
-        "Scaleway, 1x H100, € HT/h (grille officielle)",
+        "Scaleway, 1 H100, € HT/h (grille officielle)",
     ),
 ]
 
