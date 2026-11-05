@@ -36,7 +36,7 @@ jobs:
           fi
           title=$(git log -1 --format=%s)
           gh pr create --base "$base" --head "$BRANCH" --title "$title" \
-            --body-file .github/PULL_REQUEST_TEMPLATE.md
+            --body "PR ouverte automatiquement depuis \`$BRANCH\`. Le détail est dans les commits."
           # Sans protection de branche exigeant « CI OK », GitHub refuse l'auto-merge :
           # on prévient sans faire échouer le workflow (voir scripts/github-setup.sh).
           gh pr merge "$BRANCH" --auto --squash \

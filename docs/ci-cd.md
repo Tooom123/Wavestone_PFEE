@@ -20,7 +20,6 @@ flowchart LR
   RPR --> Main["main → Vercel (prod)"]
   Main --> Tag["tag vX.Y.Z"]
   Tag --> Rel["release.yml<br/>CI + image GHCR + release GitHub"]
-  CI -.->|échec / succès| Mail["notify.yml<br/>mail à l'équipe"]
 ```
 
 ## Les contrôles
@@ -45,20 +44,6 @@ gh auth login && gh auth refresh -s workflow
 Le script règle : protection de `main` et `develop` (PR obligatoire, « CI OK » obligatoire,
 branche à jour, conversations résolues, pas de force-push), squash-merge, suppression des
 branches fusionnées, auto-merge, droit aux Actions d'ouvrir des PR, alertes de sécurité.
-
-## Notifications par mail
-
-GitHub envoie déjà un mail à l'auteur d'un push dont la CI échoue (réglage personnel :
-Settings → Notifications → Actions). Pour prévenir toute l'équipe, `notify.yml` envoie un
-mail à chaque échec, et à chaque succès sur `develop` et `main`. Désactivé par défaut ;
-l'activer dans Settings → Secrets and variables → Actions :
-
-| Type | Nom | Exemple |
-|---|---|---|
-| Variable | `MAIL_NOTIFICATIONS` | `true` |
-| Secret | `MAIL_SERVER`, `MAIL_PORT` | `smtp.office365.com`, `587` |
-| Secret | `MAIL_USERNAME`, `MAIL_PASSWORD` | compte d'envoi (mot de passe d'application) |
-| Secret | `MAIL_TO` | `equipe@exemple.com` |
 
 ## Déploiement
 

@@ -49,8 +49,8 @@ livraison à Wavestone, remettre `protect main 1 false` et relancer le script.
 - **Messages de commit** : une ligne, à l'impératif ou au passé, qui dit ce qui change
   (« Corrige le calcul de la couverture », « Ajoute le bloc GPU à la démo »). Pas de
   préfixe imposé, pas de trailer. Le détail va dans la PR.
-- **Relecture** : un relecteur au moins avant `main` ; les fichiers sensibles (sandbox,
-  critique, CI) ont des propriétaires (`.github/CODEOWNERS`).
+- **Relecture** : aucune n'est imposée pendant la simulation en solo ; pour la livraison, remonter
+  les relectures requises sur `main` (`scripts/github-setup.sh`).
 - **Historique linéaire** sur `develop` ; `main` reçoit des fusions de release.
 
 ## Livrer une version

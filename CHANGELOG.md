@@ -4,6 +4,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 
 ## [Non publié]
 
+### Retiré
+- Modèles de PR et d'issues, fichier CODEOWNERS, notification par mail
+
 ### Ajouté
 - Benchmark coûts on-premise contre cloud (`docs/finops/`, `agent_data.finops`, `scripts/finops_report.py`)
 
