@@ -11,6 +11,53 @@ export interface Health {
   busy: boolean;
 }
 
+export interface Usage {
+  calls: number;
+  prompt_tokens: number;
+  completion_tokens: number;
+  seconds: number;
+  load_seconds: number;
+}
+
+export interface RunMetrics {
+  usage: Record<Role, Usage>;
+  models: Record<Role, string>;
+  gpu: {
+    seconds: number;
+    energy_wh: number;
+    avg_power_w: number;
+    peak_power_w: number;
+    peak_memory_mb: number;
+    avg_utilization_pct: number;
+    samples: number;
+  };
+  wall_seconds: number;
+  approval_wait_seconds: number;
+}
+
+export interface GpuRow {
+  key: string;
+  name: string;
+  vram_gb: number;
+  memory: string;
+  bandwidth_gbs: number;
+  power_w: number;
+  segment: "poste" | "datacenter";
+  price_note: string;
+  cloud_eur_per_hour: number | null;
+  cloud_source: string;
+  is_reference: boolean;
+  max_params_b: number;
+  models: Record<string, { fits: boolean; tokens_per_second: number | null }>;
+}
+
+export interface SystemInfo {
+  gpu: { name: string; memory_total_mb: number; power_limit_w: number; driver: string } | null;
+  live: { memory_used_mb: number; power_w: number; utilization_pct: number } | null;
+  models: { name: string; size_gb: number }[];
+  catalog: GpuRow[];
+}
+
 export interface DatasetInfo {
   name: string;
   rows: number;
@@ -65,6 +112,6 @@ export type RunEvent = { i: number; t: number } & (
   | { kind: "code"; code: string }
   | { kind: "execution"; status: "success" | "error" | "timeout"; artifacts: number; seconds: number; error: string | null }
   | { kind: "critique"; satisfactory: boolean; issues: string[]; replan: boolean }
-  | { kind: "done"; report: Report; code: string | null; iterations: number; errors: string[] }
+  | { kind: "done"; report: Report; code: string | null; iterations: number; errors: string[]; metrics?: RunMetrics }
   | { kind: "error"; message: string; fatal?: string }
 );

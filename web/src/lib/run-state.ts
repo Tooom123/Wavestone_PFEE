@@ -1,5 +1,5 @@
 import type { StepRole } from "@/components/RoleBadge";
-import type { Plan, Report, RunEvent } from "./types";
+import type { Plan, Report, RunEvent, RunMetrics } from "./types";
 
 export interface Iteration {
   n: number;
@@ -24,6 +24,7 @@ export interface RunState {
   criticModel?: string;
   synthesisModel?: string;
   report?: Report;
+  metrics?: RunMetrics;
   warnings: string[];
   error?: string;
 }
@@ -84,7 +85,7 @@ export function runReducer(state: RunState, action: Action): RunState {
     case "critique":
       return { ...state, iterations: patchLast({ critique: e }) };
     case "done":
-      return { ...state, phase: "done", report: e.report, warnings: e.errors, current: undefined, finishedAt: Date.now() };
+      return { ...state, phase: "done", report: e.report, metrics: e.metrics, warnings: e.errors, current: undefined, finishedAt: Date.now() };
     case "error":
       return { ...state, phase: "error", error: e.message, current: undefined, finishedAt: Date.now() };
   }

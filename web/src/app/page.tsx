@@ -5,14 +5,15 @@ import { Form } from "@/components/Form";
 import { RunView } from "@/components/RunView";
 import { SettingsPanel } from "@/components/SettingsPanel";
 import { StatusBar } from "@/components/StatusBar";
-import { ApiConfig, ApiError, decidePlan, getDatasets, getHealth, loadConfig, saveConfig, startRun, streamEvents } from "@/lib/api";
+import { ApiConfig, ApiError, decidePlan, getDatasets, getHealth, getSystem, loadConfig, saveConfig, startRun, streamEvents } from "@/lib/api";
 import { initialRun, runReducer } from "@/lib/run-state";
-import type { DatasetInfo, Health } from "@/lib/types";
+import type { DatasetInfo, Health, SystemInfo } from "@/lib/types";
 
 export default function Home() {
   const [config, setConfig] = useState<ApiConfig | null>(null);
   const [health, setHealth] = useState<Health | null>(null);
   const [datasets, setDatasets] = useState<DatasetInfo[]>([]);
+  const [system, setSystem] = useState<SystemInfo | null>(null);
   const [connection, setConnection] = useState<string | null>(null);
   const [showSettings, setShowSettings] = useState(false);
   const [run, dispatch] = useReducer(runReducer, initialRun);
@@ -26,6 +27,7 @@ export default function Home() {
       const h = await getHealth(c);
       setHealth(h);
       setDatasets(await getDatasets(c));
+      getSystem(c).then(setSystem).catch(() => setSystem(null));
       setConnection(null);
     } catch (error) {
       setHealth(null);
@@ -38,7 +40,10 @@ export default function Home() {
   useEffect(() => {
     if (!config) return;
     refresh(config);
-    const timer = setInterval(() => getHealth(config).then(setHealth).catch(() => setHealth(null)), 15000);
+    const timer = setInterval(() => {
+      getHealth(config).then(setHealth).catch(() => setHealth(null));
+      getSystem(config).then(setSystem).catch(() => undefined);
+    }, 5000);
     return () => clearInterval(timer);
   }, [config, refresh]);
 
@@ -103,7 +108,7 @@ export default function Home() {
           />
         </aside>
         <section className="stage" aria-live="polite">
-          <RunView run={run} onDecide={decide} onReset={() => dispatch({ type: "reset" })} />
+          <RunView run={run} system={system} onDecide={decide} onReset={() => dispatch({ type: "reset" })} />
         </section>
       </main>
     </>

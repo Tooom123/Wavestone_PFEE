@@ -1,7 +1,8 @@
-import type { Artifact, Report } from "@/lib/types";
+import type { Artifact, Report, RunMetrics } from "@/lib/types";
 import { DataTable } from "./DataTable";
 import { Plot } from "./Plot";
 import { RoleBadge } from "./RoleBadge";
+import { RunCost } from "./RunCost";
 
 function ArtifactView({ artifact }: { artifact: Artifact }) {
   const p = artifact.payload;
@@ -21,7 +22,7 @@ function ArtifactView({ artifact }: { artifact: Artifact }) {
   );
 }
 
-export function ReportView({ report, model }: { report: Report; model?: string }) {
+export function ReportView({ report, model, metrics }: { report: Report; model?: string; metrics?: RunMetrics }) {
   const findings = report.artifacts.filter((a) => a.payload.kind === "finding");
   const visuals = report.artifacts.filter((a) => a.payload.kind !== "finding");
 
@@ -64,6 +65,7 @@ export function ReportView({ report, model }: { report: Report; model?: string }
           </div>
         </>
       )}
+      {metrics && <RunCost metrics={metrics} />}
       <footer>
         <button onClick={download}>Télécharger le rapport (JSON)</button>
       </footer>

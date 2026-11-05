@@ -1,4 +1,4 @@
-import type { DatasetInfo, Health, RunEvent } from "./types";
+import type { DatasetInfo, Health, RunEvent, SystemInfo } from "./types";
 
 export interface ApiConfig {
   baseUrl: string;
@@ -71,6 +71,7 @@ async function request<T>(config: ApiConfig, path: string, init?: RequestInit): 
 }
 
 export const getHealth = (c: ApiConfig) => request<Health>(c, "/api/health", { headers: headers(c) });
+export const getSystem = (c: ApiConfig) => request<SystemInfo>(c, "/api/system", { headers: headers(c) });
 export const getDatasets = (c: ApiConfig) => request<DatasetInfo[]>(c, "/api/datasets", { headers: headers(c) });
 
 export const startRun = (c: ApiConfig, body: { question: string; datasets: string[]; validate_plan: boolean }) =>
