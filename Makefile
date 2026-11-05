@@ -1,5 +1,5 @@
 .DEFAULT_GOAL := help
-.PHONY: help install hooks lint format typecheck test cov security web ci api demo eval clean
+.PHONY: help install lint format typecheck test cov security web ci api demo eval clean
 
 help: ## Liste les commandes
 	@grep -E '^[a-z-]+:.*##' $(MAKEFILE_LIST) | awk -F':.*## ' '{printf "  %-10s %s\n", $$1, $$2}'
@@ -7,9 +7,6 @@ help: ## Liste les commandes
 install: ## Installe les dépendances (Python et front)
 	uv sync --locked --all-groups
 	cd web && npm ci
-
-hooks: ## Active les hooks pre-commit
-	uv run pre-commit install
 
 lint: ## ruff : lint et format
 	uv run ruff check .
