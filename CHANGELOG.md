@@ -4,7 +4,12 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 
 ## [Non publié]
 
+## [0.2.0] - 2026-11-05
+
 ### Ajouté
+- Métriques par run : tokens par agent, énergie du GPU (Wh), durée hors attente de validation
+- Catalogue de GPU et endpoint `/api/system`
+- Front : bloc « Le matériel » (GPU en direct, comparaison) et coût de chaque run
 - Pipeline CI/CD : qualité, tests avec couverture, sécurité, Docker, front (`.github/workflows/`)
 - Publication de l'image du sandbox sur GHCR à chaque tag
 - Branches `develop` et `feature/*`, ouverture automatique des PR, release PR
