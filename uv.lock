@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.12"
 resolution-markers = [
     "python_full_version >= '3.15' and sys_platform == 'win32'",
@@ -50,7 +50,7 @@ dev = [
 requires-dist = [
     { name = "duckdb", specifier = ">=1.5.5" },
     { name = "fastapi", specifier = ">=0.161.1" },
-    { name = "langfuse", specifier = ">=4.15.4" },
+    { name = "langfuse", specifier = ">=5.1.0" },
     { name = "langgraph", specifier = ">=1.2.11" },
     { name = "pandas", specifier = ">=3.0.6" },
     { name = "pandera", specifier = ">=0.33.1" },
@@ -872,7 +872,7 @@ wheels = [
 
 [[package]]
 name = "langfuse"
-version = "4.15.4"
+version = "5.1.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "backoff" },
@@ -885,9 +885,9 @@ dependencies = [
     { name = "typing-extensions" },
     { name = "wrapt" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/b3/0c/ccb04968d47896e9eb7421b6e2e6e8cd510d8fa3e79337092dc734f25543/langfuse-4.15.4.tar.gz", hash = "sha256:b9a36194f4e968206d919313c24ea71c6ea68e21286370b01de752d20b26e7a3", size = 392296, upload-time = "2026-09-16T16:13:05.967Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/45/83/47ed47d5404a15da9a4176dd40f53b173bfa3eebff155a13002b6a3da9d6/langfuse-5.1.0.tar.gz", hash = "sha256:364afbfdfb44b9ae40feba73d08938c8c823a0101c85f3d466dc49d09951b286", size = 371201, upload-time = "2026-10-30T16:05:28.665Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/97/bd/8e0cadd69d0855646eda8d584ef4f38ca46cf271553af8ba7f93ae607626/langfuse-4.15.4-py3-none-any.whl", hash = "sha256:8e75c70b1522a722a11ab6c7d88e27534a5d0c3844a1a464ac5eb548b014e9c3", size = 706367, upload-time = "2026-09-16T16:13:07.294Z" },
+    { url = "https://files.pythonhosted.org/packages/0a/22/36962b043c6f2b8a1612e596670e64bb4b7137c52690aeb9f3b29dc4773d/langfuse-5.1.0-py3-none-any.whl", hash = "sha256:de947b911ead9d95c56d8592b172b7f84953789c430aa0117045f1f4b6e5a6d3", size = 641284, upload-time = "2026-10-30T16:05:26.931Z" },
 ]
 
 [[package]]

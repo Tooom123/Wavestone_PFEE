@@ -12,7 +12,7 @@ requires-python = ">=3.12"
 dependencies = [
     "duckdb>=1.5.5",
     "fastapi>=0.161.1",
-    "langfuse>=4.15.4",
+    "langfuse>=5.1.0",
     "langgraph>=1.2.11",
     "pandas>=3.0.6",
     "pandera>=0.33.1",
