@@ -1,0 +1,22 @@
+name: Bug
+description: Quelque chose ne marche pas comme prévu
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: Ce qui se passe
+      description: Ce que vous voyez, et ce que vous attendiez.
+    validations: { required: true }
+  - type: textarea
+    id: repro
+    attributes:
+      label: Pour reproduire
+      description: Jeu de données, question posée, commande lancée.
+    validations: { required: true }
+  - type: textarea
+    id: env
+    attributes:
+      label: Environnement
+      description: Sortie de `uv run agent-data check` (GPU, modèles, Docker).
+      render: text

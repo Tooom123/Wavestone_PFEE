@@ -3,7 +3,9 @@
 import { useEffect, useState } from "react";
 import type { Iteration, RunState } from "@/lib/run-state";
 import { ReportView } from "./ReportView";
+import { HardwarePanel } from "./HardwarePanel";
 import { RoleBadge } from "./RoleBadge";
+import type { SystemInfo } from "@/lib/types";
 
 function useElapsed(run: RunState) {
   const [now, setNow] = useState(() => Date.now());
@@ -17,7 +19,7 @@ function useElapsed(run: RunState) {
   return `${Math.round(((run.finishedAt ?? now) - run.startedAt) / 1000)} s`;
 }
 
-function Idle() {
+function Idle({ system }: { system: SystemInfo | null }) {
   return (
     <div className="idle">
       <h2>Une question, une analyse conduite de bout en bout</h2>
@@ -32,6 +34,7 @@ function Idle() {
         <li data-role="critic"><strong>Critique</strong><span>Le résultat est relu ; en cas d&apos;échec, le code est corrigé.</span></li>
         <li data-role="synthesis"><strong>Réponse</strong><span>Les résultats chiffrés sont traduits en langage de décideur.</span></li>
       </ol>
+      {system && <HardwarePanel system={system} />}
     </div>
   );
 }
@@ -66,7 +69,7 @@ function IterationView({
         <RoleBadge role="coder" model={it.model} />
         {it.critique && !it.critique.satisfactory && <span className="why">{reason(it)}</span>}
         {it.execution && <span className="muted"> · {it.execution.seconds} s · {it.execution.artifacts} artefact(s)</span>}
-        
+
       </summary>
       {it.code && (
         <details className="code">
@@ -88,15 +91,17 @@ function IterationView({
 
 export function RunView({
   run,
+  system,
   onDecide,
   onReset,
 }: {
   run: RunState;
+  system: SystemInfo | null;
   onDecide: (approved: boolean) => void;
   onReset: () => void;
 }) {
   const elapsed = useElapsed(run);
-  if (run.phase === "idle") return <Idle />;
+  if (run.phase === "idle") return <Idle system={system} />;
   const running = run.phase === "running";
 
   return (
@@ -198,7 +203,7 @@ export function RunView({
         </div>
       )}
 
-      {run.report && <ReportView report={run.report} model={run.synthesisModel} />}
+      {run.report && <ReportView report={run.report} model={run.synthesisModel} metrics={run.metrics} />}
     </div>
   );
 }

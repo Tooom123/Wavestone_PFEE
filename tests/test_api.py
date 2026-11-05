@@ -65,6 +65,8 @@ def test_run_complet_en_streaming(data_dir: Path, plan_json: str, ok_result) -> 
     assert {"profile", "plan", "iteration", "code", "execution", "critique"} <= set(kinds)
     assert [e["i"] for e in events] == list(range(len(events)))  # ordre stable, reprise possible
     done = events[-1]
+    assert set(done["metrics"]["usage"]) == {"planner", "coder", "critic", "synthesis"}
+    assert "energy_wh" in done["metrics"]["gpu"]
     assert "progresse" in done["report"]["synthesis"]
     assert done["report"]["artifacts"]
 
@@ -110,3 +112,10 @@ def test_un_seul_run_a_la_fois(data_dir: Path, plan_json: str) -> None:
     assert first.status_code == 200
     assert client.post("/api/runs", json=body).status_code == 409
     client.post(f"/api/runs/{first.json()['run_id']}/approval", json={"approved": False})
+
+
+def test_endpoint_systeme_donne_le_gpu_et_la_comparaison(data_dir: Path) -> None:
+    client = _client(data_dir, FakeLLM([]), [])
+    body = client.get("/api/system").json()
+    assert {"gpu", "live", "models", "catalog"} <= set(body)
+    assert any(row["is_reference"] for row in body["catalog"])

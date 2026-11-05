@@ -301,3 +301,29 @@ tr:last-child td { border-bottom: 0; }
 .report[data-role] { border-top: 4px solid var(--c); }
 .critique .role { margin-left: 0; }
 .report > header .role { margin-left: 8px; }
+
+/* --- cout du run et materiel ------------------------------------------------------ */
+.cost { border-top: 1px solid var(--line); padding-top: 14px; display: grid; gap: 10px; }
+.cost h3, .cost h4 { margin: 0; }
+.cost h4 { font-size: 14px; color: var(--muted); margin-top: 6px; }
+.kpis { display: grid; grid-template-columns: repeat(auto-fit, minmax(170px, 1fr)); gap: 10px; }
+.kpis div { padding: 10px 12px; background: var(--surface-2); border-radius: 8px; display: grid; }
+.kpis strong { font-size: 20px; font-variant-numeric: tabular-nums; }
+.kpis span { font-size: 12.5px; color: var(--muted); }
+
+.hardware { margin-top: 26px; display: grid; gap: 12px; }
+.hardware h2 { margin: 0; }
+.hardware h3 { font-size: 14px; margin: 6px 0 0; }
+.gpu-card { padding: 14px; border: 1px solid var(--line); border-radius: 10px; display: grid; gap: 8px; }
+.gpu-head { display: flex; justify-content: space-between; gap: 10px; flex-wrap: wrap; align-items: baseline; }
+.gpu-head strong { font-size: 17px; }
+.gpu-live { display: grid; gap: 4px; font-size: 13px; font-variant-numeric: tabular-nums; }
+.meter { height: 8px; border-radius: 99px; background: var(--surface-2); overflow: hidden; }
+.meter div { height: 100%; background: var(--accent); transition: width 0.4s; }
+.hardware td, .hardware th { white-space: normal; }
+.hardware tr.ref td { background: var(--accent-soft); font-weight: 600; }
+.hardware .fit { color: var(--ok); }
+.hardware .nofit { color: var(--ko); }
+.hardware th small { font-weight: 400; color: var(--muted); }
+.hardware td.price { min-width: 150px; }
+.hardware td, .hardware th { padding: 6px 10px; }

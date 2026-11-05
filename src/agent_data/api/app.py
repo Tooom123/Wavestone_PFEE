@@ -21,13 +21,15 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from agent_data.api.runs import RunBusyError, RunManager
-from agent_data.config import DATA_DIR, Settings, get_settings
+from agent_data.config import DATA_DIR, Role, Settings, get_settings
 from agent_data.eval.cases import CASES
+from agent_data.gpu import gpu_info, read_sample
+from agent_data.gpu_catalog import comparison
 from agent_data.llm import OllamaClient
 from agent_data.profiling import profile_csv
 from agent_data.sandbox import DockerSandbox, docker_available
 
-ROLES = ("planner", "coder", "critic", "synthesis")
+ROLES: tuple[Role, ...] = ("planner", "coder", "critic", "synthesis")
 
 
 class RunRequest(BaseModel):
@@ -100,6 +102,30 @@ def create_app(
             },
             "auth_required": bool(settings.api_token),
             "busy": manager.active is not None,
+        }
+
+    @app.get("/api/system", dependencies=auth)
+    def system() -> dict:
+        """Materiel qui porte l'agent : GPU detecte, mesure en direct, comparaison."""
+        info = gpu_info()
+        sample = read_sample()
+        sizes = OllamaClient(settings).model_sizes_gb()
+        used = {settings.model_for(role) for role in ROLES}
+        return {
+            "gpu": info.as_dict() if info else None,
+            "live": (
+                {
+                    "memory_used_mb": sample.memory_used_mb,
+                    "power_w": sample.power_w,
+                    "utilization_pct": sample.utilization_pct,
+                }
+                if sample
+                else None
+            ),
+            "models": [
+                {"name": m, "size_gb": round(sizes[m], 1)} for m in sorted(used) if m in sizes
+            ],
+            "catalog": comparison({m: sizes[m] for m in used if m in sizes}),
         }
 
     @app.get("/api/datasets", dependencies=auth)

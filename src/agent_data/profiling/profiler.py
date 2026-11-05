@@ -10,6 +10,7 @@ plafonnee et desactivable.
 from __future__ import annotations
 
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 
@@ -114,7 +115,7 @@ def profile_csv(
     name: str | None = None,
     include_top_values: bool = True,
     parse_dates: bool = True,
-    **read_csv_kwargs: object,
+    **read_csv_kwargs: Any,
 ) -> DatasetProfile:
     """Charge un CSV et en retourne le profil.
 
@@ -126,7 +127,7 @@ def profile_csv(
     if not csv_path.exists():
         raise FileNotFoundError(f"CSV introuvable : {csv_path}")
 
-    df = pd.read_csv(csv_path, **read_csv_kwargs)  # type: ignore[arg-type]
+    df = pd.read_csv(csv_path, **read_csv_kwargs)
     if parse_dates:
         df = _coerce_dates(df)
 

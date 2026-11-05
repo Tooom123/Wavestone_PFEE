@@ -237,9 +237,17 @@ telecharge ; `uv run python scripts/download_data.py` aussi.
 | `superstore` | 8 399 x 21 | BI descriptive | Temps, geographie, categories, marge — le cas d'usage cite par Wavestone |
 | `personality` | 2 240 x 29 | Exploration | Segmentation et RFM, sans cible predefinie |
 
+## Documentation
+
+- [`docs/architecture.md`](docs/architecture.md) — schéma, patterns, passage à une data platform
+- [`docs/adr/`](docs/adr/) — les décisions d'architecture et leurs raisons
+- [`docs/git-workflow.md`](docs/git-workflow.md) — branches, PR, livraison
+- [`docs/ci-cd.md`](docs/ci-cd.md) — pipeline, déploiement, notifications
+- [`CONTRIBUTING.md`](CONTRIBUTING.md), [`SECURITY.md`](SECURITY.md), [`CHANGELOG.md`](CHANGELOG.md)
+
 ## Conventions
 
 - **uv** partout, jamais de `pip install` direct. `pyproject.toml` et `uv.lock` versionnes.
 - Branches : `main` (protegee) et `develop`. Toute feature -> `feature/...` -> PR vers `develop`, avec revue de code.
-- CI sur chaque PR : `uv sync` -> `ruff check` -> `pytest`.
+- CI sur chaque push : qualite, tests et couverture, securite, Docker, front (`make ci` en local).
 - **Aucun CSV brut versionne.** Aucune cle API dans le depot.

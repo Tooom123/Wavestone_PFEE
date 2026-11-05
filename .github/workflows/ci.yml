@@ -1,58 +1,165 @@
 name: CI
 
+# Chaque push sur n'importe quelle branche lance le pipeline ; les PR vers develop et main
+# le relancent sur le résultat de la fusion. Le job `ci-ok` est le seul contrôle à rendre
+# obligatoire dans la protection de branche : il échoue si un des autres échoue.
 on:
-  pull_request:
-    branches: [main, develop]
   push:
-    branches: [main, develop]
+    branches: ["**"]
+    tags-ignore: ["v*"]
+  pull_request:
+    branches: [develop, main]
+  workflow_call:
+  workflow_dispatch:
+
+# Un nouveau push sur la même branche annule le run en cours.
+concurrency:
+  group: ci-${{ github.head_ref || github.ref }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  UV_VERSION: "0.12.17"
+  SANDBOX_IMAGE: agent-data-sandbox:latest
 
 jobs:
-  quality:
+  python-quality:
+    name: Python · qualité
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Installe uv
-        uses: astral-sh/setup-uv@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
         with:
+          version: ${{ env.UV_VERSION }}
           enable-cache: true
-
-      - name: Installe les dependances
+      - name: Le lockfile est à jour
+        run: uv lock --check
+      - name: Dépendances
         run: uv sync --locked --all-groups
-
       - name: Lint (ruff)
         run: uv run ruff check .
-
       - name: Format (ruff)
         run: uv run ruff format --check .
+      - name: Typage (mypy)
+        run: uv run mypy
 
-      - name: Construit l'image du sandbox
-        run: docker build -t agent-data-sandbox:latest -f docker/sandbox.Dockerfile docker/
+  python-tests:
+    name: Python · tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - name: Dépendances
+        run: uv sync --locked --all-groups
+      - name: Image du sandbox
+        # Docker est présent sur les runners : les tests d'isolation tournent réellement
+        # (réseau coupé, boucle infinie tuée, écriture hors zone refusée).
+        run: docker build -t "$SANDBOX_IMAGE" -f docker/sandbox.Dockerfile docker/
+      - name: Tests et couverture
+        run: uv run pytest --cov --cov-report=xml --cov-report=term
+      - name: Rapport de couverture
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: couverture
+          path: coverage.xml
+          if-no-files-found: ignore
+          retention-days: 14
 
-      - name: Tests (pytest)
-        # Docker est disponible sur les runners GitHub : les tests d'isolation du
-        # sandbox tournent donc reellement en CI.
-        run: uv run pytest
+  security:
+    name: Sécurité
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0 # tout l'historique, pour la recherche de secrets
+      - uses: astral-sh/setup-uv@d4b2f3b6ecc6e67c4457f6d3e41ec42d3d0fcb86 # v5
+        with:
+          version: ${{ env.UV_VERSION }}
+          enable-cache: true
+      - name: Dépendances
+        run: uv sync --locked --all-groups
+      - name: Analyse statique (bandit)
+        run: uv run bandit -q -r src -c pyproject.toml
+      - name: Vulnérabilités des dépendances Python (pip-audit)
+        run: |
+          uv export --no-dev --no-hashes --frozen --no-emit-project -o "$RUNNER_TEMP/requirements.txt"
+          uv run pip-audit -r "$RUNNER_TEMP/requirements.txt" --disable-pip --no-deps
+      - name: Aucun secret dans l'historique (gitleaks)
+        run: |
+          docker run --rm -v "$PWD:/repo" zricethezav/gitleaks:v8.21.2 \
+            detect --source /repo --redact --no-banner --verbose
+      - name: Aucune donnée brute versionnée
+        run: |
+          if git ls-files | grep -E '\.(csv|parquet|xlsx)$|(^|/)\.env$'; then
+            echo "::error::Des données ou un .env sont versionnés (interdit par le cadrage Wavestone)."
+            exit 1
+          fi
+
+  docker:
+    name: Docker · sandbox
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: Lint du Dockerfile (hadolint)
+        uses: hadolint/hadolint-action@54c9adbab1582c2ef04b2016b760714a4bfde3cf # v3.1.0
+        with:
+          dockerfile: docker/sandbox.Dockerfile
+          failure-threshold: warning
+      - name: Construction de l'image
+        run: docker build -t "$SANDBOX_IMAGE" -f docker/sandbox.Dockerfile docker/
+      - name: Scan de vulnérabilités (trivy)
+        uses: aquasecurity/trivy-action@ed142fd0673e97e23eac54620cfb913e5ce36c25 # v0.36.0
+        with:
+          image-ref: ${{ env.SANDBOX_IMAGE }}
+          severity: CRITICAL
+          ignore-unfixed: true
+          exit-code: "1"
 
   web:
+    name: Front · build
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     defaults:
       run:
         working-directory: web
     steps:
-      - uses: actions/checkout@v4
-
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version: 20
           cache: npm
           cache-dependency-path: web/package-lock.json
-
-      - name: Installe les dependances
+      - name: Dépendances
         run: npm ci
-
       - name: Types (tsc)
         run: npm run typecheck
-
+      - name: Vulnérabilités (npm audit)
+        run: npm audit --audit-level=high
       - name: Build (Next.js)
         run: npm run build
+
+  ci-ok:
+    name: CI OK
+    if: always()
+    needs: [python-quality, python-tests, security, docker, web]
+    runs-on: ubuntu-latest
+    steps:
+      - name: Tous les contrôles sont passés
+        env:
+          RESULTS: ${{ join(needs.*.result, ' ') }}
+        run: |
+          echo "Résultats : $RESULTS"
+          if echo "$RESULTS" | grep -qE 'failure|cancelled'; then
+            echo "::error::Au moins un contrôle a échoué."
+            exit 1
+          fi

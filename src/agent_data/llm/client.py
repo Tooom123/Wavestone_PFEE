@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import urllib.error
 import urllib.request
+from dataclasses import dataclass
 from typing import Protocol
 
 from agent_data.config import Role, Settings, get_settings
@@ -17,6 +18,34 @@ from agent_data.config import Role, Settings, get_settings
 
 class LLMError(RuntimeError):
     """Echec d'un appel au LLM."""
+
+
+@dataclass
+class Usage:
+    """Consommation cumulee d'un client : ce que coute reellement un run en tokens et en temps."""
+
+    calls: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    seconds: float = 0.0
+    load_seconds: float = 0.0
+    """Part passee a charger le modele en VRAM (changement de modele)."""
+
+    def add(self, other: Usage) -> None:
+        self.calls += other.calls
+        self.prompt_tokens += other.prompt_tokens
+        self.completion_tokens += other.completion_tokens
+        self.seconds += other.seconds
+        self.load_seconds += other.load_seconds
+
+    def as_dict(self) -> dict[str, float | int]:
+        return {
+            "calls": self.calls,
+            "prompt_tokens": self.prompt_tokens,
+            "completion_tokens": self.completion_tokens,
+            "seconds": round(self.seconds, 1),
+            "load_seconds": round(self.load_seconds, 1),
+        }
 
 
 class LLMClient(Protocol):
@@ -37,11 +66,12 @@ class OllamaClient:
     def __init__(self, settings: Settings | None = None, *, model: str | None = None) -> None:
         self.settings = settings or get_settings()
         self.model = model or self.settings.llm_model
+        self.usage = Usage()
 
     def is_available(self) -> bool:
         """Vrai si le serveur Ollama repond."""
         try:
-            with urllib.request.urlopen(  # noqa: S310
+            with urllib.request.urlopen(  # noqa: S310  # nosec B310 - schema http(s) valide par Settings
                 f"{self.settings.llm_base_url}/api/version", timeout=5
             ) as response:
                 return response.status == 200
@@ -51,13 +81,24 @@ class OllamaClient:
     def installed_models(self) -> list[str]:
         """Liste les modeles presents sur le serveur."""
         try:
-            with urllib.request.urlopen(  # noqa: S310
+            with urllib.request.urlopen(  # noqa: S310  # nosec B310 - schema http(s) valide par Settings
                 f"{self.settings.llm_base_url}/api/tags", timeout=10
             ) as response:
                 payload = json.loads(response.read())
         except (urllib.error.URLError, OSError, TimeoutError, json.JSONDecodeError):
             return []
         return [m.get("name", "") for m in payload.get("models", [])]
+
+    def model_sizes_gb(self) -> dict[str, float]:
+        """Taille sur disque de chaque modele installe, en Go."""
+        try:
+            with urllib.request.urlopen(  # noqa: S310  # nosec B310 - schema http(s) valide par Settings
+                f"{self.settings.llm_base_url}/api/tags", timeout=10
+            ) as response:
+                payload = json.loads(response.read())
+        except (urllib.error.URLError, OSError, TimeoutError, json.JSONDecodeError):
+            return {}
+        return {m.get("name", ""): m.get("size", 0) / 1e9 for m in payload.get("models", [])}
 
     def complete(self, prompt: str, *, system: str = "") -> str:
         """Interroge le modele et retourne sa reponse textuelle."""
@@ -71,14 +112,14 @@ class OllamaClient:
         if system:
             body["system"] = system
 
-        request = urllib.request.Request(  # noqa: S310
+        request = urllib.request.Request(  # noqa: S310  # nosec B310 - schema http(s) valide par Settings
             f"{self.settings.llm_base_url}/api/generate",
             data=json.dumps(body).encode("utf-8"),
             headers={"Content-Type": "application/json"},
             method="POST",
         )
         try:
-            with urllib.request.urlopen(  # noqa: S310
+            with urllib.request.urlopen(  # noqa: S310  # nosec B310 - schema http(s) valide par Settings
                 request, timeout=self.settings.llm_timeout_seconds
             ) as response:
                 payload = json.loads(response.read())
@@ -92,6 +133,16 @@ class OllamaClient:
         except json.JSONDecodeError as exc:
             raise LLMError("Reponse Ollama illisible (JSON invalide).") from exc
 
+        # Ollama renvoie les compteurs de tokens et les durees (en nanosecondes).
+        self.usage.add(
+            Usage(
+                calls=1,
+                prompt_tokens=int(payload.get("prompt_eval_count", 0)),
+                completion_tokens=int(payload.get("eval_count", 0)),
+                seconds=payload.get("total_duration", 0) / 1e9,
+                load_seconds=payload.get("load_duration", 0) / 1e9,
+            )
+        )
         return str(payload.get("response", "")).strip()
 
 
