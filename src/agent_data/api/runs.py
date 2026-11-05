@@ -13,6 +13,7 @@ import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from agent_data.gpu import GpuSampler
 from agent_data.graph import RunTrace, Stage1
 from agent_data.pipeline import analyze
 from agent_data.sandbox import SandboxUnavailableError
@@ -88,13 +89,18 @@ class RunManager:
             trace = RunTrace(listener=run.publish)
             run.publish({"kind": "start", "question": run.question, "datasets": run.datasets})
 
-            report, state = analyze(
-                run.question,
-                list(csvs.values()),
-                stage1=stage1,
-                approve_plan=lambda _state: run.wait_for_approval(),
-                trace=trace,
-            )
+            sampler = GpuSampler()
+            sampler.start()
+            try:
+                report, state = analyze(
+                    run.question,
+                    list(csvs.values()),
+                    stage1=stage1,
+                    approve_plan=lambda _state: run.wait_for_approval(),
+                    trace=trace,
+                )
+            finally:
+                gpu = sampler.stop()
             run.publish(
                 {
                     "kind": "done",
@@ -102,6 +108,11 @@ class RunManager:
                     "code": state.code,
                     "iterations": state.iteration,
                     "errors": state.errors,
+                    "metrics": {
+                        "usage": stage1.usage_by_role(),
+                        "gpu": gpu.as_dict(),
+                        "wall_seconds": round(time.time() - run.started_at, 1),
+                    },
                 }
             )
         except SandboxUnavailableError as exc:

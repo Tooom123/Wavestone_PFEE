@@ -22,7 +22,7 @@ from agent_data.config import Settings, get_settings
 from agent_data.critic import review
 from agent_data.critic.critic import redact_data_values
 from agent_data.executor import generate_code
-from agent_data.llm import LLMClient, get_client
+from agent_data.llm import LLMClient, Usage, get_client
 from agent_data.planner import plan_analysis
 from agent_data.profiling import profile_csv
 from agent_data.sandbox import DockerSandbox, MountedDataset
@@ -76,6 +76,14 @@ class Stage1:
         }
         self.client = self.clients["coder"]
         self.sandbox = sandbox or DockerSandbox(self.settings)
+
+    def usage_by_role(self) -> dict[str, dict[str, float | int]]:
+        """Tokens et temps consommes par chaque agent depuis la creation de la boucle."""
+        out: dict[str, dict[str, float | int]] = {}
+        for role, client in self.clients.items():
+            usage = getattr(client, "usage", None)
+            out[role] = usage.as_dict() if usage is not None else Usage().as_dict()
+        return out
 
     def run(
         self,

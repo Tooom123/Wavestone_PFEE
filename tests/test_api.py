@@ -65,6 +65,8 @@ def test_run_complet_en_streaming(data_dir: Path, plan_json: str, ok_result) -> 
     assert {"profile", "plan", "iteration", "code", "execution", "critique"} <= set(kinds)
     assert [e["i"] for e in events] == list(range(len(events)))  # ordre stable, reprise possible
     done = events[-1]
+    assert set(done["metrics"]["usage"]) == {"planner", "coder", "critic", "synthesis"}
+    assert "energy_wh" in done["metrics"]["gpu"]
     assert "progresse" in done["report"]["synthesis"]
     assert done["report"]["artifacts"]
 
