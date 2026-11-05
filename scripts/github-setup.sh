@@ -87,10 +87,3 @@ if [ "$DRY" = "1" ]; then echo "[dry-run] création des étiquettes : dependenci
   label ci 8a63d2 "Pipeline CI/CD"
   label docker 0db7ed "Image du sandbox"
 fi
-
-cat <<'NEXT'
-
-Reste à faire à la main (Settings > Secrets and variables > Actions) pour les mails :
-  variable MAIL_NOTIFICATIONS=true ; secrets MAIL_SERVER, MAIL_PORT, MAIL_USERNAME,
-  MAIL_PASSWORD, MAIL_TO (voir docs/ci-cd.md).
-NEXT
