@@ -89,6 +89,17 @@ class OllamaClient:
             return []
         return [m.get("name", "") for m in payload.get("models", [])]
 
+    def model_sizes_gb(self) -> dict[str, float]:
+        """Taille sur disque de chaque modele installe, en Go."""
+        try:
+            with urllib.request.urlopen(  # noqa: S310  # nosec B310 - schema http(s) valide par Settings
+                f"{self.settings.llm_base_url}/api/tags", timeout=10
+            ) as response:
+                payload = json.loads(response.read())
+        except (urllib.error.URLError, OSError, TimeoutError, json.JSONDecodeError):
+            return {}
+        return {m.get("name", ""): m.get("size", 0) / 1e9 for m in payload.get("models", [])}
+
     def complete(self, prompt: str, *, system: str = "") -> str:
         """Interroge le modele et retourne sa reponse textuelle."""
         body = {

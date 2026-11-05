@@ -36,6 +36,8 @@ class Run:
     events: list[dict] = field(default_factory=list)
     finished: bool = False
     started_at: float = field(default_factory=time.time)
+    approval_wait_seconds: float = 0.0
+    """Temps passe a attendre la validation humaine : de l'attente, pas du calcul."""
     _approval: threading.Event = field(default_factory=threading.Event)
     _approved: bool = False
     _lock: threading.Lock = field(default_factory=threading.Lock)
@@ -54,7 +56,9 @@ class Run:
 
     def wait_for_approval(self) -> bool:
         """Bloque le run jusqu'a la decision de l'utilisateur."""
+        started = time.time()
         decided = self._approval.wait(timeout=APPROVAL_TIMEOUT_SECONDS)
+        self.approval_wait_seconds = time.time() - started
         return decided and self._approved
 
 
@@ -110,6 +114,8 @@ class RunManager:
                     "errors": state.errors,
                     "metrics": {
                         "usage": stage1.usage_by_role(),
+                        "models": {r: stage1.settings.model_for(r) for r in stage1.clients},
+                        "approval_wait_seconds": round(run.approval_wait_seconds, 1),
                         "gpu": gpu.as_dict(),
                         "wall_seconds": round(time.time() - run.started_at, 1),
                     },
