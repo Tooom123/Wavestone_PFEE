@@ -1,0 +1,7 @@
+# Relecteurs demandés automatiquement. Ajouter ici les comptes Wavestone (@utilisateur ou
+# @organisation/equipe) après le transfert du dépôt.
+*                              @Tooom123
+/.github/                      @Tooom123
+/docker/                       @Tooom123
+/src/agent_data/sandbox/       @Tooom123
+/src/agent_data/critic/        @Tooom123

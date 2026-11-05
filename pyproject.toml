@@ -70,7 +70,8 @@ ignore_missing_imports = true
 [tool.bandit]
 # B404/B603/B607 : l'agent pilote le CLI `docker` par conception (c'est le sandbox).
 # Les arguments viennent de la configuration, jamais d'une entree utilisateur.
-skips = ["B404", "B603", "B607"]
+# B108 : le seul /tmp du code est un point de montage *dans le conteneur* (tmpfs du sandbox).
+skips = ["B404", "B603", "B607", "B108"]
 exclude_dirs = ["tests"]
 
 [tool.coverage.run]

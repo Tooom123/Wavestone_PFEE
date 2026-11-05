@@ -1,0 +1,34 @@
+# Installation : uv run pre-commit install   (une fois par clone)
+repos:
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: v0.16.8
+    hooks:
+      - id: ruff-check
+        args: [--fix]
+      - id: ruff-format
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v5.0.0
+    hooks:
+      - id: trailing-whitespace
+      - id: end-of-file-fixer
+      - id: check-yaml
+      - id: check-toml
+      - id: check-merge-conflict
+      - id: detect-private-key
+      - id: check-added-large-files
+        args: [--maxkb=500]
+
+  - repo: local
+    hooks:
+      - id: no-data-or-env
+        name: aucune donnée brute ni .env
+        entry: Les CSV, parquet, xlsx et .env ne se versionnent pas (cadrage Wavestone).
+        language: fail
+        files: '(\.csv|\.parquet|\.xlsx)$|(^|/)\.env$'
+      - id: mypy
+        name: typage (mypy)
+        entry: uv run mypy
+        language: system
+        pass_filenames: false
+        types: [python]

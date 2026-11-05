@@ -66,7 +66,7 @@ function IterationView({
         <RoleBadge role="coder" model={it.model} />
         {it.critique && !it.critique.satisfactory && <span className="why">{reason(it)}</span>}
         {it.execution && <span className="muted"> · {it.execution.seconds} s · {it.execution.artifacts} artefact(s)</span>}
-        
+
       </summary>
       {it.code && (
         <details className="code">
