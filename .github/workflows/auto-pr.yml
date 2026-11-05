@@ -1,0 +1,43 @@
+name: PR automatique
+
+# Pousser une branche de travail ouvre sa PR vers develop et active la fusion automatique :
+# elle partira d'elle-même dès que « CI OK » est vert. main n'est jamais touchée ici : elle
+# ne reçoit que des releases (voir release-pr.yml) ou des hotfix relus.
+on:
+  push:
+    branches: ["feature/**", "fix/**", "chore/**", "docs/**", "hotfix/**"]
+
+permissions:
+  contents: read
+  pull-requests: write
+
+concurrency:
+  group: auto-pr-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  open-pr:
+    name: Ouvrir la PR
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+      - name: PR vers develop (main pour un hotfix)
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BRANCH: ${{ github.ref_name }}
+        run: |
+          base=develop
+          [[ "$BRANCH" == hotfix/* ]] && base=main
+          open=$(gh pr list --head "$BRANCH" --base "$base" --state open --json number --jq 'length')
+          if [ "$open" != "0" ]; then
+            echo "Une PR est déjà ouverte pour $BRANCH."
+            exit 0
+          fi
+          title=$(git log -1 --format=%s)
+          gh pr create --base "$base" --head "$BRANCH" --title "$title" \
+            --body-file .github/PULL_REQUEST_TEMPLATE.md
+          # Sans protection de branche exigeant « CI OK », GitHub refuse l'auto-merge :
+          # on prévient sans faire échouer le workflow (voir scripts/github-setup.sh).
+          gh pr merge "$BRANCH" --auto --squash \
+            || echo "::warning::Fusion automatique indisponible : lancer scripts/github-setup.sh."

@@ -33,8 +33,14 @@ build-backend = "uv_build"
 
 [dependency-groups]
 dev = [
+    "bandit>=1.9.4",
     "httpx>=0.28.1",
+    "mypy>=2.4.1",
+    "pandas-stubs>=3.1.0.261029",
+    "pip-audit>=2.10.1",
+    "pre-commit>=4.7.0",
     "pytest>=9.1.1",
+    "pytest-cov>=7.1.0",
     "ruff>=0.16.8",
 ]
 
@@ -47,3 +53,33 @@ select = ["E", "F", "I", "UP", "B", "SIM"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+
+[tool.mypy]
+python_version = "3.12"
+files = ["src"]
+warn_unused_ignores = true
+warn_redundant_casts = true
+no_implicit_optional = true
+check_untyped_defs = true
+plugins = ["pydantic.mypy"]
+
+[[tool.mypy.overrides]]
+module = ["langfuse.*", "langgraph.*", "plotly.*", "sklearn.*", "scipy.*", "pandera.*", "streamlit.*"]
+ignore_missing_imports = true
+
+[tool.bandit]
+# B404/B603/B607 : l'agent pilote le CLI `docker` par conception (c'est le sandbox).
+# Les arguments viennent de la configuration, jamais d'une entree utilisateur.
+# B108 : le seul /tmp du code est un point de montage *dans le conteneur* (tmpfs du sandbox).
+skips = ["B404", "B603", "B607", "B108"]
+exclude_dirs = ["tests"]
+
+[tool.coverage.run]
+source = ["agent_data"]
+branch = false
+
+[tool.coverage.report]
+# Les tests du sandbox exigent Docker : en local sans Docker la couverture est plus basse.
+fail_under = 75
+show_missing = true
+skip_covered = true

@@ -6,6 +6,7 @@ Cette fonction ne fait que les relier, via le contrat d'artefacts.
 
 from __future__ import annotations
 
+from collections.abc import Sequence
 from pathlib import Path
 
 from agent_data.graph import PlanApproval, RunTrace, Stage1
@@ -15,7 +16,7 @@ from agent_data.schemas import AgentState
 
 def analyze(
     question: str,
-    csv_paths: list[Path | str],
+    csv_paths: Sequence[Path | str],
     *,
     stage1: Stage1 | None = None,
     approve_plan: PlanApproval | None = None,

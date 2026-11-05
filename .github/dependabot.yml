@@ -1,0 +1,37 @@
+version: 2
+updates:
+  - package-ecosystem: uv
+    directory: /
+    target-branch: develop
+    schedule: { interval: weekly, day: monday }
+    open-pull-requests-limit: 5
+    groups:
+      python-minor-patch:
+        update-types: [minor, patch]
+    commit-message: { prefix: "Deps" }
+    labels: [dependencies, python]
+
+  - package-ecosystem: npm
+    directory: /web
+    target-branch: develop
+    schedule: { interval: weekly, day: monday }
+    open-pull-requests-limit: 5
+    groups:
+      web-minor-patch:
+        update-types: [minor, patch]
+    commit-message: { prefix: "Deps" }
+    labels: [dependencies, web]
+
+  - package-ecosystem: github-actions
+    directory: /
+    target-branch: develop
+    schedule: { interval: weekly, day: monday }
+    commit-message: { prefix: "CI" }
+    labels: [dependencies, ci]
+
+  - package-ecosystem: docker
+    directory: /docker
+    target-branch: develop
+    schedule: { interval: weekly, day: monday }
+    commit-message: { prefix: "Docker" }
+    labels: [dependencies, docker]

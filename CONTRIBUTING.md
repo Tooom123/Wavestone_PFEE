@@ -10,18 +10,21 @@ uv run agent-data check    # verifie que tout est en place
 
 ## Workflow git
 
-- `main` est protegee. `develop` porte l'integration.
-- Toute contribution : branche `feature/...` depuis `develop` -> PR vers `develop`, revue de code avant merge.
-- Messages de commit courts et descriptifs, une unite de travail par commit.
-- Chaque PR est relue ; la CI (`uv sync` -> `ruff` -> `pytest`) doit etre verte.
+Branches `main` (livrable, protégée), `develop` (intégration, protégée) et `feature/...`.
+Toute contribution passe par une PR vers `develop`, relue, avec une CI verte.
+Détail, livraison et hotfix : [`docs/git-workflow.md`](docs/git-workflow.md). Le pipeline
+est décrit dans [`docs/ci-cd.md`](docs/ci-cd.md).
 
 ```bash
 git switch develop && git pull
 git switch -c feature/mon-sujet
+uv run pre-commit install     # une fois par clone
 # ... travail ...
-uv run ruff check . && uv run ruff format . && uv run pytest
-git push -u origin feature/mon-sujet
+make ci                       # ce que fera la CI : lint, typage, tests, sécurité, front
+git push -u origin feature/mon-sujet   # la PR vers develop s'ouvre automatiquement
 ```
+
+Messages de commit : une ligne simple qui dit ce qui change, sans préfixe ni trailer.
 
 ## Regles du projet
 
