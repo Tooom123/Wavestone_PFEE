@@ -72,9 +72,10 @@ JSON
   fi
 }
 
-# main : une relecture (Wavestone) ; develop : la CI suffit. Les administrateurs ne sont pas
+# main : aucune relecture pendant la simulation en solo (à remonter à 1 pour Wavestone) ;
+# develop : la CI suffit. Les administrateurs ne sont pas
 # bloqués (enforce_admins=false) pour ne pas verrouiller une petite équipe.
-protect main 1 false
+protect main 0 false  # simulation en solo : repasser à 1 pour la livraison à Wavestone
 protect develop 0 true
 
 echo "==> Étiquettes"

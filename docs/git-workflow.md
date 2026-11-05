@@ -38,7 +38,9 @@ git push -u origin feature/mon-sujet
 ```
 
 Le push ouvre la PR vers `develop` toute seule (`auto-pr.yml`) et active la fusion
-automatique : elle part dès que « CI OK » est vert et que la relecture exigée est faite.
+automatique : elle part dès que « CI OK » est vert et que la relecture exigée, s'il y en a une, est faite.
+Pendant la simulation en solo, `main` n'en exige aucune (`scripts/github-setup.sh`) ; pour la
+livraison à Wavestone, remettre `protect main 1 false` et relancer le script.
 
 ## Règles
 
