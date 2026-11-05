@@ -1,10 +1,12 @@
 [project]
 name = "agent-data"
 version = "0.1.0"
-description = "Agent d'analyse de donnees : question metier en langage naturel + CSV -> reponse analytique"
 readme = "README.md"
 authors = [
-    { name = "tom.angles", email = "tom.angles.64@gmail.com" }
+    { name = "Artus Cescon", email = "artus.cescon@epita.fr" },
+    { name = "Estename Brouillard", email = "estename.brouillard@epita.fr" },
+    { name = "Theodore Deguest", email = "theodore.deguest@epita.fr" },
+    { name = "Tom Angles", email = "tom.angles@epita.fr" },
 ]
 requires-python = ">=3.12"
 dependencies = [
