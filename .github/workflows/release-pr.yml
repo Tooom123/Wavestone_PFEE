@@ -1,0 +1,44 @@
+name: PR de release
+
+# Prépare une livraison : ouvre la PR develop → main avec la liste des changements depuis
+# le dernier tag. Après relecture et fusion, poser le tag vX.Y.Z déclenche release.yml.
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version à livrer, sans le v (ex. 0.2.0)"
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  open-release-pr:
+    name: Ouvrir la PR de release
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          fetch-depth: 0
+          ref: develop
+      - name: PR develop → main
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ inputs.version }}
+        run: |
+          if ! [[ "$VERSION" =~ ^[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+            echo "::error::Version invalide : $VERSION (attendu : X.Y.Z)"; exit 1
+          fi
+          last=$(git describe --tags --abbrev=0 origin/main 2>/dev/null || true)
+          range="${last:+$last..}origin/develop"
+          {
+            echo "## Release v$VERSION"
+            echo
+            git log --no-merges --format='- %s (%an)' "$range"
+            echo
+            echo "Après fusion : \`git tag -a v$VERSION -m \"v$VERSION\" && git push origin v$VERSION\`"
+          } > "$RUNNER_TEMP/body.md"
+          gh pr create --base main --head develop --title "Release v$VERSION" \
+            --body-file "$RUNNER_TEMP/body.md"
