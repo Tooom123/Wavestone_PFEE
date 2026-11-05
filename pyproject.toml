@@ -10,7 +10,7 @@ authors = [
 ]
 requires-python = ">=3.12"
 dependencies = [
-    "duckdb>=1.5.5",
+    "duckdb>=2.0.0",
     "fastapi>=0.161.1",
     "langfuse>=4.15.4",
     "langgraph>=1.2.11",
