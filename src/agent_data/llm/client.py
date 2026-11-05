@@ -10,6 +10,7 @@ from __future__ import annotations
 import json
 import urllib.error
 import urllib.request
+from dataclasses import dataclass
 from typing import Protocol
 
 from agent_data.config import Role, Settings, get_settings
@@ -17,6 +18,34 @@ from agent_data.config import Role, Settings, get_settings
 
 class LLMError(RuntimeError):
     """Echec d'un appel au LLM."""
+
+
+@dataclass
+class Usage:
+    """Consommation cumulee d'un client : ce que coute reellement un run en tokens et en temps."""
+
+    calls: int = 0
+    prompt_tokens: int = 0
+    completion_tokens: int = 0
+    seconds: float = 0.0
+    load_seconds: float = 0.0
+    """Part passee a charger le modele en VRAM (changement de modele)."""
+
+    def add(self, other: Usage) -> None:
+        self.calls += other.calls
+        self.prompt_tokens += other.prompt_tokens
+        self.completion_tokens += other.completion_tokens
+        self.seconds += other.seconds
+        self.load_seconds += other.load_seconds
+
+    def as_dict(self) -> dict[str, float | int]:
+        return {
+            "calls": self.calls,
+            "prompt_tokens": self.prompt_tokens,
+            "completion_tokens": self.completion_tokens,
+            "seconds": round(self.seconds, 1),
+            "load_seconds": round(self.load_seconds, 1),
+        }
 
 
 class LLMClient(Protocol):
@@ -37,6 +66,7 @@ class OllamaClient:
     def __init__(self, settings: Settings | None = None, *, model: str | None = None) -> None:
         self.settings = settings or get_settings()
         self.model = model or self.settings.llm_model
+        self.usage = Usage()
 
     def is_available(self) -> bool:
         """Vrai si le serveur Ollama repond."""
@@ -92,6 +122,16 @@ class OllamaClient:
         except json.JSONDecodeError as exc:
             raise LLMError("Reponse Ollama illisible (JSON invalide).") from exc
 
+        # Ollama renvoie les compteurs de tokens et les durees (en nanosecondes).
+        self.usage.add(
+            Usage(
+                calls=1,
+                prompt_tokens=int(payload.get("prompt_eval_count", 0)),
+                completion_tokens=int(payload.get("eval_count", 0)),
+                seconds=payload.get("total_duration", 0) / 1e9,
+                load_seconds=payload.get("load_duration", 0) / 1e9,
+            )
+        )
         return str(payload.get("response", "")).strip()
 
 

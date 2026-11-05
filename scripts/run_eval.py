@@ -11,6 +11,7 @@ minutes par cas.
 from __future__ import annotations
 
 import argparse
+import json
 import sys
 import time
 from pathlib import Path
@@ -19,6 +20,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent / "src"))
 
 from agent_data.config import DATA_DIR, get_settings  # noqa: E402
 from agent_data.eval import CASES, check_stage1, check_stage2  # noqa: E402
+from agent_data.gpu import GpuSampler  # noqa: E402
 from agent_data.graph import RunTrace, Stage1  # noqa: E402
 from agent_data.rendering import synthesize  # noqa: E402
 from agent_data.sandbox import SandboxUnavailableError, docker_available  # noqa: E402
@@ -35,6 +37,7 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--case", action="append", help="Identifiant de cas (defaut : tous)")
     parser.add_argument("--stage", type=int, choices=[1, 2], help="N'evalue qu'un etage")
+    parser.add_argument("--json", help="Ecrit les mesures (tokens, energie, duree) dans ce fichier")
     args = parser.parse_args(argv)
 
     if not docker_available():
@@ -54,6 +57,7 @@ def main(argv: list[str] | None = None) -> int:
     stage1 = Stage1(settings=settings)
     total = passed = 0
     failures: list[str] = []
+    measures: list[dict] = []
 
     for case in selected:
         csv = _csv_for(case.dataset)
@@ -65,9 +69,13 @@ def main(argv: list[str] | None = None) -> int:
         print(f"    {case.question}")
         started = time.monotonic()
         trace = RunTrace()
+        before = stage1.usage_by_role()
+        sampler = GpuSampler()
+        sampler.start()
         try:
             state = stage1.run(case.question, [csv], approve_plan=lambda _: True, trace=trace)
         except SandboxUnavailableError as exc:
+            sampler.stop()
             print(f"    ECHEC : {exc}")
             failures.append(case.id)
             continue
@@ -87,10 +95,40 @@ def main(argv: list[str] | None = None) -> int:
                 failures.append(f"{case.id}/{stage}: {result.detail}")
             print(f"    [{'ok ' if result.passed else 'KO '}] {stage} — {result.detail}")
 
+        gpu = sampler.stop()
+        after = stage1.usage_by_role()
+        # Les compteurs sont cumules sur toute la session : on retient la difference.
+        usage = {
+            role: {k: round(after[role][k] - before[role][k], 1) for k in after[role]}
+            for role in after
+        }
+        tokens_in = sum(u["prompt_tokens"] for u in usage.values())
+        tokens_out = sum(u["completion_tokens"] for u in usage.values())
+        duration = time.monotonic() - started
         print(
-            f"    {time.monotonic() - started:.0f}s, {state.iteration} iteration(s), "
+            f"    {duration:.0f}s, {state.iteration} iteration(s), "
             f"{len(state.artifacts)} artefact(s)"
         )
+        print(
+            f"    {tokens_in:.0f} tokens en entree, {tokens_out:.0f} en sortie ; "
+            f"GPU {gpu.energy_wh:.2f} Wh (moy. {gpu.avg_power_w:.0f} W, "
+            f"pic {gpu.peak_power_w:.0f} W, {gpu.peak_memory_mb:.0f} Mo)"
+        )
+        measures.append(
+            {
+                "case": case.id,
+                "family": case.family,
+                "seconds": round(duration, 1),
+                "iterations": state.iteration,
+                "artifacts": len(state.artifacts),
+                "usage": usage,
+                "gpu": gpu.as_dict(),
+            }
+        )
+
+    if args.json:
+        Path(args.json).write_text(json.dumps(measures, ensure_ascii=False, indent=2))
+        print(f"\nMesures ecrites dans {args.json}")
 
     print(f"\n{passed}/{total} controle(s) reussi(s)")
     if failures:
