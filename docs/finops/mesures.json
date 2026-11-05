@@ -1,0 +1,140 @@
+[
+  {
+    "case": "churn_facteurs",
+    "family": "classification",
+    "seconds": 92.2,
+    "iterations": 2,
+    "artifacts": 4,
+    "usage": {
+      "planner": {
+        "calls": 1,
+        "prompt_tokens": 922,
+        "completion_tokens": 1870,
+        "seconds": 30.5,
+        "load_seconds": 10.8
+      },
+      "coder": {
+        "calls": 2,
+        "prompt_tokens": 3465,
+        "completion_tokens": 1258,
+        "seconds": 34.8,
+        "load_seconds": 6.1
+      },
+      "critic": {
+        "calls": 1,
+        "prompt_tokens": 790,
+        "completion_tokens": 34,
+        "seconds": 1.5,
+        "load_seconds": 0.1
+      },
+      "synthesis": {
+        "calls": 1,
+        "prompt_tokens": 1646,
+        "completion_tokens": 819,
+        "seconds": 20.1,
+        "load_seconds": 10.9
+      }
+    },
+    "gpu": {
+      "seconds": 92.0,
+      "energy_wh": 3.21,
+      "avg_power_w": 125.7,
+      "peak_power_w": 203.0,
+      "peak_memory_mb": 10936,
+      "avg_utilization_pct": 62.1,
+      "samples": 87
+    }
+  },
+  {
+    "case": "ventes_qualite",
+    "family": "descriptif",
+    "seconds": 78.0,
+    "iterations": 2,
+    "artifacts": 4,
+    "usage": {
+      "planner": {
+        "calls": 1,
+        "prompt_tokens": 1090,
+        "completion_tokens": 1541,
+        "seconds": 16.4,
+        "load_seconds": 0.2
+      },
+      "coder": {
+        "calls": 2,
+        "prompt_tokens": 3030,
+        "completion_tokens": 1065,
+        "seconds": 30.5,
+        "load_seconds": 6.4
+      },
+      "critic": {
+        "calls": 1,
+        "prompt_tokens": 526,
+        "completion_tokens": 34,
+        "seconds": 6.1,
+        "load_seconds": 0.0
+      },
+      "synthesis": {
+        "calls": 1,
+        "prompt_tokens": 1984,
+        "completion_tokens": 976,
+        "seconds": 22.3,
+        "load_seconds": 11.2
+      }
+    },
+    "gpu": {
+      "seconds": 77.9,
+      "energy_wh": 2.87,
+      "avg_power_w": 132.8,
+      "peak_power_w": 203.8,
+      "peak_memory_mb": 10951,
+      "avg_utilization_pct": 64.6,
+      "samples": 75
+    }
+  },
+  {
+    "case": "segments_clients",
+    "family": "clustering",
+    "seconds": 78.7,
+    "iterations": 1,
+    "artifacts": 6,
+    "usage": {
+      "planner": {
+        "calls": 1,
+        "prompt_tokens": 1281,
+        "completion_tokens": 1870,
+        "seconds": 23.9,
+        "load_seconds": 0.2
+      },
+      "coder": {
+        "calls": 1,
+        "prompt_tokens": 1405,
+        "completion_tokens": 752,
+        "seconds": 27.5,
+        "load_seconds": 6.4
+      },
+      "critic": {
+        "calls": 1,
+        "prompt_tokens": 551,
+        "completion_tokens": 34,
+        "seconds": 1.4,
+        "load_seconds": 0.1
+      },
+      "synthesis": {
+        "calls": 1,
+        "prompt_tokens": 1688,
+        "completion_tokens": 958,
+        "seconds": 23.3,
+        "load_seconds": 10.5
+      }
+    },
+    "gpu": {
+      "seconds": 78.6,
+      "energy_wh": 2.84,
+      "avg_power_w": 130.3,
+      "peak_power_w": 177.7,
+      "peak_memory_mb": 10951,
+      "avg_utilization_pct": 72.0,
+      "samples": 75
+    }
+  }
+]

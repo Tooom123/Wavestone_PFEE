@@ -4,6 +4,9 @@ Format : [Keep a Changelog](https://keepachangelog.com/fr/1.1.0/), versions [Sem
 
 ## [Non publié]
 
+### Ajouté
+- Benchmark coûts on-premise contre cloud (`docs/finops/`, `agent_data.finops`, `scripts/finops_report.py`)
+
 ## [0.2.0] - 2026-11-05
 
 ### Ajouté
