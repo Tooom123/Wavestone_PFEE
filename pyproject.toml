@@ -4,7 +4,7 @@ version = "0.1.0"
 readme = "README.md"
 authors = [
     { name = "Artus Cescon", email = "artus.cescon@epita.fr" },
-    { name = "Estename Brouillard", email = "estename.brouillard@epita.fr" },
+    { name = "Estebane Brouillard", email = "estebane.brouillard@epita.fr" },
     { name = "Theodore Deguest", email = "theodore.deguest@epita.fr" },
     { name = "Tom Angles", email = "tom.angles@epita.fr" },
 ]
