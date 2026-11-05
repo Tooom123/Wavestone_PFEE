@@ -242,8 +242,7 @@ telecharge ; `uv run python scripts/download_data.py` aussi.
 - [`docs/architecture.md`](docs/architecture.md) — schéma, patterns, passage à une data platform
 - [`docs/adr/`](docs/adr/) — les décisions d'architecture et leurs raisons
 - [`docs/git-workflow.md`](docs/git-workflow.md) — branches, PR, livraison
-- [`docs/ci-cd.md`](docs/ci-cd.md) — pipeline, déploiement, notifications
-- [`CONTRIBUTING.md`](CONTRIBUTING.md), [`SECURITY.md`](SECURITY.md), [`CHANGELOG.md`](CHANGELOG.md)
+- [`docs/ci-cd.md`](docs/ci-cd.md) — pipeline, déploiement
 
 ## Conventions
 
