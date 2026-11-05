@@ -38,7 +38,9 @@ git push -u origin feature/mon-sujet
 ```
 
 Le push ouvre la PR vers `develop` toute seule (`auto-pr.yml`) et active la fusion
-automatique : elle part dès que « CI OK » est vert et que la relecture exigée est faite.
+automatique : elle part dès que « CI OK » est vert et que la relecture exigée, s'il y en a une, est faite.
+Pendant la simulation en solo, `main` n'en exige aucune (`scripts/github-setup.sh`) ; pour la
+livraison à Wavestone, remettre `protect main 1 false` et relancer le script.
 
 ## Règles
 
@@ -47,8 +49,8 @@ automatique : elle part dès que « CI OK » est vert et que la relecture exigé
 - **Messages de commit** : une ligne, à l'impératif ou au passé, qui dit ce qui change
   (« Corrige le calcul de la couverture », « Ajoute le bloc GPU à la démo »). Pas de
   préfixe imposé, pas de trailer. Le détail va dans la PR.
-- **Relecture** : un relecteur au moins avant `main` ; les fichiers sensibles (sandbox,
-  critique, CI) ont des propriétaires (`.github/CODEOWNERS`).
+- **Relecture** : aucune n'est imposée pendant la simulation en solo ; pour la livraison, remonter
+  les relectures requises sur `main` (`scripts/github-setup.sh`).
 - **Historique linéaire** sur `develop` ; `main` reçoit des fusions de release.
 
 ## Livrer une version
