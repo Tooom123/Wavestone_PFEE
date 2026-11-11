@@ -26,6 +26,7 @@ from agent_data.eval import golden, metrics, report  # noqa: E402
 from agent_data.eval.judge import judge_relevance  # noqa: E402
 from agent_data.graph import RunTrace, Stage1  # noqa: E402
 from agent_data.rendering import synthesize  # noqa: E402
+from agent_data.rendering.synthesis import describe_artifacts  # noqa: E402
 from agent_data.sandbox import docker_available  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -44,7 +45,17 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--juge", action="store_true", help="Note la pertinence avec un LLM local")
     parser.add_argument("--golden", default=str(EVAL_DIR / "golden.json"))
     parser.add_argument("--out", default=str(EVAL_DIR / "resultats"), help="Sans extension")
+    parser.add_argument(
+        "--rapport", action="store_true", help="Regenere le rapport depuis le JSON, sans run"
+    )
     args = parser.parse_args(argv)
+    out = Path(args.out)
+
+    if args.rapport:
+        data = json.loads(out.with_suffix(".json").read_text())
+        out.with_suffix(".md").write_text(report.render(data["results"], data["meta"]))
+        print(f"Rapport : {out.with_suffix('.md')}")
+        return 0
 
     if not docker_available():
         print("Docker est indisponible : l'evaluation exige un sandbox.", file=sys.stderr)
@@ -108,30 +119,22 @@ def main(argv: list[str] | None = None) -> int:
                 "seconds": round(seconds, 1),
                 "iterations": iterations,
                 "artifacts": len(artifacts),
+                # Ce que la synthese a vu : sert de contexte a scripts/ragas_golden.py.
+                "context": describe_artifacts(artifacts, max_rows=50),
             }
         )
 
-    scores = [metrics.CaseScore(**r["score"]) for r in results]
-    summary = metrics.summarize(scores)
-    for key, values in summary.items():
-        values["relevance"] = metrics.mean(
-            [r["relevance"] for r in results if key in ("total", r["category"])]
-        )
+    summary = metrics.summarize([metrics.CaseScore(**r["score"]) for r in results])
     meta = {
         "date": date.today().isoformat(),
         "models": ", ".join(f"{r} = {settings.model_for(r)}" for r in stage1.clients),
         "minutes": (time.monotonic() - started_all) / 60,
     }
 
-    out = Path(args.out)
     out.parent.mkdir(parents=True, exist_ok=True)
-    out.with_suffix(".json").write_text(
-        json.dumps(
-            {"meta": meta, "summary": summary, "results": results}, ensure_ascii=False, indent=2
-        )
-        + "\n"
-    )
-    out.with_suffix(".md").write_text(report.render(results, summary, meta))
+    payload = {"meta": meta, "summary": summary, "results": results}
+    out.with_suffix(".json").write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
+    out.with_suffix(".md").write_text(report.render(results, meta))
     total = summary["total"]
     print(f"\n{total['passed']}/{total['cases']} questions reussies")
     print(f"Rapport : {out.with_suffix('.md')}")

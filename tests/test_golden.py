@@ -262,9 +262,8 @@ def test_juge_inexploitable(raw: str) -> None:
     assert judge_relevance(FakeLLM([raw]), "Q ?", "R.") is None
 
 
-def test_rapport_markdown() -> None:
-    score = metrics.score_case(CONTRAT, "42,7 % seulement.", ARTIFACTS)
-    result = {
+def _result(score: metrics.CaseScore, **extra: object) -> dict:
+    return {
         "id": CONTRAT.id,
         "category": CONTRAT.category,
         "question": CONTRAT.question,
@@ -272,11 +271,25 @@ def test_rapport_markdown() -> None:
         "answer": "42,7 % seulement.",
         "error": "",
         "score": score.__dict__,
-        "relevance": 0.5,
+        "relevance": None,
         "seconds": 80.0,
+        **extra,
     }
-    summary = metrics.summarize([score])
-    summary["total"]["relevance"] = summary["comparaison"]["relevance"] = 0.5
-    text = report.render([result], summary, {"date": "2026-11-11", "models": "m", "minutes": 1.3})
-    assert "0 questions réussies sur 1" in text
-    assert "deux ans" in text and "Pertinence (juge)" in text
+
+
+META = {"date": "2026-11-11", "models": "m", "minutes": 1.3}
+
+
+def test_rapport_markdown() -> None:
+    score = metrics.score_case(CONTRAT, "42,7 % seulement.", ARTIFACTS)
+    text = report.render([_result(score)], META)
+    assert "0 questions réussies sur 1" in text and "deux ans" in text
+    assert "Pertinence" not in text and "RAGAS" not in text  # notes optionnelles absentes
+
+
+def test_rapport_avec_juge_et_ragas() -> None:
+    score = metrics.score_case(CONTRAT, "42,7 % seulement.", ARTIFACTS)
+    ragas = {"faithfulness": 1.0, "answer_accuracy": 0.5}
+    text = report.render([_result(score, relevance=0.75, ragas=ragas)], META | {"ragas_judge": "q"})
+    assert "Pertinence (juge)" in text and "RAGAS fidélité" in text and "juge RAGAS : q" in text
+    assert "| 75 % |" in text and "| 50 % |" in text
