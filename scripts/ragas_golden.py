@@ -15,10 +15,12 @@ Script autonome : uv installe RAGAS dans un environnement a part (en-tete ci-des
 toucher aux dependances de l'agent. RAGAS fige des versions de LangChain incompatibles avec
 celles du projet ; voir docs/eval/README.md pour le detail.
 
-Metriques retenues apres essai (docs/eval/README.md) :
-  - faithfulness : chaque affirmation de la reponse est-elle appuyee par les resultats ?
-    Complete notre controle, qui ne verifie que les chiffres.
-  - answer_accuracy : la reponse concorde-t-elle avec la reponse de reference ?
+Notes calculees (lecture detaillee : docs/eval/README.md) :
+  - answer_accuracy : la reponse concorde-t-elle avec la reponse de reference ? Bon second
+    avis : sur 24 vraies reponses, une note <= 0,25 signale 5 echecs sur 7 sans fausse alerte.
+  - faithfulness : chaque affirmation est-elle appuyee par les resultats ? Bruitee sur nos
+    reponses (penalise les phrases de methode) : a lire avec prudence.
+La reussite d'une question reste decidee par les metriques deterministes du projet.
 Rien ne sort du poste : le juge est un modele Ollama local.
 """
 

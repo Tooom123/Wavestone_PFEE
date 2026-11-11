@@ -233,9 +233,13 @@ deterministe, meme a temperature 0 (le plan, lui, l'est). Juger sur plusieurs ru
 rappel du contexte, fidelite), plus une notation RAGAS optionnelle avec un juge local :
 
 ```bash
-uv run python scripts/run_golden.py       # ~35 min, rapport dans docs/eval/resultats.md
+uv run python scripts/run_golden.py       # ~25 min, rapport dans docs/eval/resultats.md
 uv run scripts/ragas_golden.py            # optionnel : notes RAGAS
 ```
+
+Derniere execution (11/11/2026) : **17/24 questions reussies**, identique sur deux passages.
+L'agent repond juste aux questions directes, mais conclut parfois a l'inverse de ses chiffres
+et ne reconnait jamais qu'une question depasse les donnees.
 
 Methode, test de RAGAS et limites : [`docs/eval/README.md`](docs/eval/README.md).
 
