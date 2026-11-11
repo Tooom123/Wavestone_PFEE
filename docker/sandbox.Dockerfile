@@ -1,6 +1,6 @@
 # Image d'execution du code genere par le LLM.
 # Volontairement minimale : uniquement les bibliotheques d'analyse, aucun outil reseau.
-FROM python:3.12-slim
+FROM python:3.15-slim
 
 # Dependances d'analyse. Versions epinglees pour que deux runs restent comparables.
 RUN pip install --no-cache-dir \
