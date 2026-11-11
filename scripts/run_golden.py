@@ -1,6 +1,6 @@
 """Fait tourner l'agent sur le golden dataset et mesure la qualite de ses reponses.
 
-    uv run python scripts/run_golden.py                       # les 24 questions (~40 min)
+    uv run python scripts/run_golden.py                       # les 24 questions (~25 min)
     uv run python scripts/run_golden.py --category agregat    # une categorie
     uv run python scripts/run_golden.py --case agr_churn      # une question
     uv run python scripts/run_golden.py --juge                # ajoute la note de pertinence
