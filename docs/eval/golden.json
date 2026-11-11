@@ -1,0 +1,651 @@
+[
+  {
+    "id": "agr_churn",
+    "category": "agregat",
+    "dataset": "telco_churn",
+    "question": "Quel est le taux de résiliation global des clients ?",
+    "facts": [
+      {
+        "name": "taux de résiliation",
+        "kind": "number",
+        "value": 26.537,
+        "unit": "%",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "",
+    "reference_answer": "taux de résiliation : 26,5 %"
+  },
+  {
+    "id": "agr_ca_profit",
+    "category": "agregat",
+    "dataset": "superstore",
+    "question": "Quel est le chiffre d'affaires total et le profit total sur l'ensemble des commandes ?",
+    "facts": [
+      {
+        "name": "chiffre d'affaires total",
+        "kind": "number",
+        "value": 14915600.824,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      },
+      {
+        "name": "profit total",
+        "kind": "number",
+        "value": 1521767.98,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "",
+    "reference_answer": "chiffre d'affaires total : 14 915 601 ; profit total : 1 521 768"
+  },
+  {
+    "id": "agr_revenu",
+    "category": "agregat",
+    "dataset": "personality",
+    "question": "Quel est le revenu annuel moyen des clients ?",
+    "facts": [
+      {
+        "name": "revenu annuel moyen",
+        "kind": "number",
+        "value": 52247.2514,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "24 revenus manquants, ignorés dans la moyenne",
+    "reference_answer": "revenu annuel moyen : 52 247"
+  },
+  {
+    "id": "agr_facture",
+    "category": "agregat",
+    "dataset": "telco_churn",
+    "question": "Quelle est la facture mensuelle moyenne d'un client ?",
+    "facts": [
+      {
+        "name": "facture mensuelle moyenne",
+        "kind": "number",
+        "value": 64.7617,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "",
+    "reference_answer": "facture mensuelle moyenne : 64,8"
+  },
+  {
+    "id": "cmp_contrat",
+    "category": "comparaison",
+    "dataset": "telco_churn",
+    "question": "Le taux de résiliation varie-t-il selon le type de contrat ?",
+    "facts": [
+      {
+        "name": "taux de résiliation (Month-to-month)",
+        "kind": "number",
+        "value": 42.7097,
+        "unit": "%",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      },
+      {
+        "name": "taux de résiliation (One year)",
+        "kind": "number",
+        "value": 11.2695,
+        "unit": "%",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      },
+      {
+        "name": "taux de résiliation (Two year)",
+        "kind": "number",
+        "value": 2.8319,
+        "unit": "%",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "",
+    "reference_answer": "taux de résiliation (Month-to-month) : 42,7 % ; taux de résiliation (One year) : 11,3 % ; taux de résiliation (Two year) : 2,8 %"
+  },
+  {
+    "id": "cmp_seniors",
+    "category": "comparaison",
+    "dataset": "telco_churn",
+    "question": "Les clients seniors résilient-ils davantage que les autres ?",
+    "facts": [
+      {
+        "name": "taux de résiliation des seniors",
+        "kind": "number",
+        "value": 41.6813,
+        "unit": "%",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      },
+      {
+        "name": "taux de résiliation des autres",
+        "kind": "number",
+        "value": 23.6062,
+        "unit": "%",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "",
+    "reference_answer": "taux de résiliation des seniors : 41,7 % ; taux de résiliation des autres : 23,6 %"
+  },
+  {
+    "id": "cmp_enfants",
+    "category": "comparaison",
+    "dataset": "personality",
+    "question": "Les clients qui ont des enfants ou des adolescents au foyer dépensent-ils moins que les autres, toutes catégories de produits confondues ?",
+    "facts": [
+      {
+        "name": "dépense moyenne avec enfants",
+        "kind": "number",
+        "value": 406.5799,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      },
+      {
+        "name": "dépense moyenne sans enfants",
+        "kind": "number",
+        "value": 1106.0298,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "dépense = somme des six colonnes Mnt*",
+    "reference_answer": "dépense moyenne avec enfants : 406,6 ; dépense moyenne sans enfants : 1 106"
+  },
+  {
+    "id": "cmp_segment",
+    "category": "comparaison",
+    "dataset": "superstore",
+    "question": "Quel segment de clientèle génère le plus de chiffre d'affaires ?",
+    "facts": [
+      {
+        "name": "segment le plus important",
+        "kind": "label",
+        "value": "Corporate",
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": [
+          "entreprise",
+          "entreprises",
+          "grands comptes"
+        ]
+      },
+      {
+        "name": "son chiffre d'affaires",
+        "kind": "number",
+        "value": 5498904.8775,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "",
+    "reference_answer": "segment le plus important : Corporate ; son chiffre d'affaires : 5 498 905"
+  },
+  {
+    "id": "tmp_ca_annuel",
+    "category": "temporel",
+    "dataset": "superstore",
+    "question": "Comment le chiffre d'affaires a-t-il évolué d'une année à l'autre de 2009 à 2012 ?",
+    "facts": [
+      {
+        "name": "chiffre d'affaires 2009",
+        "kind": "number",
+        "value": 4209139.4555,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      },
+      {
+        "name": "chiffre d'affaires 2010",
+        "kind": "number",
+        "value": 3549680.8045,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      },
+      {
+        "name": "chiffre d'affaires 2011",
+        "kind": "number",
+        "value": 3436816.702,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      },
+      {
+        "name": "chiffre d'affaires 2012",
+        "kind": "number",
+        "value": 3719963.862,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "",
+    "reference_answer": "chiffre d'affaires 2009 : 4 209 139 ; chiffre d'affaires 2010 : 3 549 681 ; chiffre d'affaires 2011 : 3 436 817 ; chiffre d'affaires 2012 : 3 719 964"
+  },
+  {
+    "id": "tmp_profit",
+    "category": "temporel",
+    "dataset": "superstore",
+    "question": "Le profit de 2012 est-il supérieur à celui de 2011 ?",
+    "facts": [
+      {
+        "name": "profit 2011",
+        "kind": "number",
+        "value": 381455.99,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      },
+      {
+        "name": "profit 2012",
+        "kind": "number",
+        "value": 341901.78,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "",
+    "reference_answer": "profit 2011 : 381 456 ; profit 2012 : 341 902"
+  },
+  {
+    "id": "tmp_recrutement",
+    "category": "temporel",
+    "dataset": "personality",
+    "question": "Combien de nouveaux clients ont été enregistrés chaque année ?",
+    "facts": [
+      {
+        "name": "nouveaux clients 2012",
+        "kind": "number",
+        "value": 494.0,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      },
+      {
+        "name": "nouveaux clients 2013",
+        "kind": "number",
+        "value": 1189.0,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      },
+      {
+        "name": "nouveaux clients 2014",
+        "kind": "number",
+        "value": 557.0,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "année d'inscription = Dt_Customer",
+    "reference_answer": "nouveaux clients 2012 : 494 ; nouveaux clients 2013 : 1 189 ; nouveaux clients 2014 : 557"
+  },
+  {
+    "id": "tmp_commandes",
+    "category": "temporel",
+    "dataset": "superstore",
+    "question": "Quelle année a connu le plus grand nombre de commandes ?",
+    "facts": [
+      {
+        "name": "année avec le plus de commandes",
+        "kind": "label",
+        "value": "2009",
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      },
+      {
+        "name": "nombre de commandes cette année-là",
+        "kind": "number",
+        "value": 1394.0,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "une commande = un Order ID distinct",
+    "reference_answer": "année avec le plus de commandes : 2009 ; nombre de commandes cette année-là : 1 394"
+  },
+  {
+    "id": "rel_anciennete",
+    "category": "relation",
+    "dataset": "telco_churn",
+    "question": "Les clients qui résilient ont-ils une ancienneté plus faible que ceux qui restent ?",
+    "facts": [
+      {
+        "name": "ancienneté moyenne des partants (mois)",
+        "kind": "number",
+        "value": 17.9791,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      },
+      {
+        "name": "ancienneté moyenne des fidèles (mois)",
+        "kind": "number",
+        "value": 37.57,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "",
+    "reference_answer": "ancienneté moyenne des partants (mois) : 18,0 ; ancienneté moyenne des fidèles (mois) : 37,6"
+  },
+  {
+    "id": "rel_revenu_vin",
+    "category": "relation",
+    "dataset": "personality",
+    "question": "Quelle est la corrélation entre le revenu et les dépenses en vin ?",
+    "facts": [
+      {
+        "name": "corrélation revenu / vin",
+        "kind": "number",
+        "value": 0.5786,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": 0.03,
+        "aliases": []
+      }
+    ],
+    "note": "corrélation de Pearson",
+    "reference_answer": "corrélation revenu / vin : 0,579"
+  },
+  {
+    "id": "rel_remise_profit",
+    "category": "relation",
+    "dataset": "superstore",
+    "question": "Quelle est la corrélation entre la remise accordée et le profit d'une commande ?",
+    "facts": [
+      {
+        "name": "corrélation remise / profit",
+        "kind": "number",
+        "value": -0.0371,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": 0.03,
+        "aliases": []
+      }
+    ],
+    "note": "corrélation de Pearson, ligne à ligne",
+    "reference_answer": "corrélation remise / profit : -0,0371"
+  },
+  {
+    "id": "rel_facture",
+    "category": "relation",
+    "dataset": "telco_churn",
+    "question": "La facture mensuelle est-elle plus élevée chez les clients qui partent ?",
+    "facts": [
+      {
+        "name": "facture moyenne des partants",
+        "kind": "number",
+        "value": 74.4413,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      },
+      {
+        "name": "facture moyenne des fidèles",
+        "kind": "number",
+        "value": 61.2651,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "",
+    "reference_answer": "facture moyenne des partants : 74,4 ; facture moyenne des fidèles : 61,3"
+  },
+  {
+    "id": "cls_sous_categories",
+    "category": "classement",
+    "dataset": "superstore",
+    "question": "Quelles sont les trois sous-catégories de produits les plus rentables ?",
+    "facts": [
+      {
+        "name": "n°1 des sous-catégories",
+        "kind": "label",
+        "value": "Telephones and Communication",
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      },
+      {
+        "name": "n°2 des sous-catégories",
+        "kind": "label",
+        "value": "Office Machines",
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      },
+      {
+        "name": "n°3 des sous-catégories",
+        "kind": "label",
+        "value": "Binders and Binder Accessories",
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "rentabilité = profit total",
+    "reference_answer": "n°1 des sous-catégories : Telephones and Communication ; n°2 des sous-catégories : Office Machines ; n°3 des sous-catégories : Binders and Binder Accessories"
+  },
+  {
+    "id": "cls_region",
+    "category": "classement",
+    "dataset": "superstore",
+    "question": "Quelle région réalise le plus de ventes ?",
+    "facts": [
+      {
+        "name": "région en tête",
+        "kind": "label",
+        "value": "West",
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": [
+          "ouest"
+        ]
+      },
+      {
+        "name": "ses ventes",
+        "kind": "number",
+        "value": 3597549.2755,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "",
+    "reference_answer": "région en tête : West ; ses ventes : 3 597 549"
+  },
+  {
+    "id": "cls_depense",
+    "category": "classement",
+    "dataset": "personality",
+    "question": "Sur quelle catégorie de produits les clients dépensent-ils le plus au total ?",
+    "facts": [
+      {
+        "name": "catégorie la plus dépensée",
+        "kind": "label",
+        "value": "MntWines",
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": [
+          "vin",
+          "vins",
+          "wine",
+          "wines"
+        ]
+      },
+      {
+        "name": "dépense totale dans cette catégorie",
+        "kind": "number",
+        "value": 680816.0,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "",
+    "reference_answer": "catégorie la plus dépensée : MntWines ; dépense totale dans cette catégorie : 680 816"
+  },
+  {
+    "id": "cls_paiement",
+    "category": "classement",
+    "dataset": "telco_churn",
+    "question": "Quel moyen de paiement présente le taux de résiliation le plus élevé ?",
+    "facts": [
+      {
+        "name": "moyen de paiement le plus exposé",
+        "kind": "label",
+        "value": "Electronic check",
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": [
+          "cheque electronique"
+        ]
+      },
+      {
+        "name": "son taux de résiliation",
+        "kind": "number",
+        "value": 45.2854,
+        "unit": "%",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "",
+    "reference_answer": "moyen de paiement le plus exposé : Electronic check ; son taux de résiliation : 45,3 %"
+  },
+  {
+    "id": "hors_appels",
+    "category": "hors_perimetre",
+    "dataset": "telco_churn",
+    "question": "Combien d'appels au service client un client passe-t-il en moyenne avant de résilier ?",
+    "facts": [
+      {
+        "name": "reconnaît que les données ne le permettent pas",
+        "kind": "abstain",
+        "value": null,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "aucune colonne d'appels",
+    "reference_answer": "Les données ne permettent pas de répondre ; la réponse doit le dire."
+  },
+  {
+    "id": "hors_satisfaction",
+    "category": "hors_perimetre",
+    "dataset": "superstore",
+    "question": "Quelle est la note de satisfaction moyenne des clients par région ?",
+    "facts": [
+      {
+        "name": "reconnaît que les données ne le permettent pas",
+        "kind": "abstain",
+        "value": null,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "aucune colonne de satisfaction",
+    "reference_answer": "Les données ne permettent pas de répondre ; la réponse doit le dire."
+  },
+  {
+    "id": "hors_paris",
+    "category": "hors_perimetre",
+    "dataset": "personality",
+    "question": "Combien de clients habitent à Paris ?",
+    "facts": [
+      {
+        "name": "reconnaît que les données ne le permettent pas",
+        "kind": "abstain",
+        "value": null,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "aucune donnée de localisation",
+    "reference_answer": "Les données ne permettent pas de répondre ; la réponse doit le dire."
+  },
+  {
+    "id": "hors_2015",
+    "category": "hors_perimetre",
+    "dataset": "superstore",
+    "question": "Quel chiffre d'affaires a été réalisé en 2015 ?",
+    "facts": [
+      {
+        "name": "reconnaît que les données ne le permettent pas",
+        "kind": "abstain",
+        "value": null,
+        "unit": "",
+        "rel_tol": 0.03,
+        "abs_tol": null,
+        "aliases": []
+      }
+    ],
+    "note": "les commandes s'arrêtent fin 2012",
+    "reference_answer": "Les données ne permettent pas de répondre ; la réponse doit le dire."
+  }
+]
