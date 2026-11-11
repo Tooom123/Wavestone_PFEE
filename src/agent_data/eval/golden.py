@@ -53,6 +53,7 @@ class Fact:
     rel_tol: float = 0.03  # ecart relatif admis (arrondis de la reponse)
     abs_tol: float | None = None  # ecart absolu admis, pour les petites valeurs
     aliases: tuple[str, ...] = ()  # autres ecritures d'une etiquette (traductions)
+    ignore_sign: bool = False  # une variation : « baisse de 15,7 % » vaut -15,7 %
 
 
 @dataclass(frozen=True)
@@ -63,20 +64,31 @@ class GoldenCase:
     question: str
     facts: list[Fact] = field(default_factory=list)
     note: str = ""
+    # Autres formulations justes et completes (ex. des variations au lieu des montants) :
+    # la reponse est evaluee sur l'ensemble de faits qu'elle couvre le mieux.
+    alternatives: list[list[Fact]] = field(default_factory=list)
+
+    @property
+    def fact_sets(self) -> list[list[Fact]]:
+        return [self.facts, *self.alternatives]
 
     @property
     def reference_answer(self) -> str:
         """La reponse attendue, en clair, pour relecture humaine."""
         if any(f.kind == "abstain" for f in self.facts):
             return "Les données ne permettent pas de répondre ; la réponse doit le dire."
-        parts = []
-        for f in self.facts:
-            if f.kind == "label":
-                parts.append(f"{f.name} : {f.value}")
-            else:
-                value = float(f.value) if isinstance(f.value, int | float) else 0.0
-                parts.append(f"{f.name} : {_fmt(value)}{' %' if f.unit == '%' else ''}")
-        return " ; ".join(parts)
+        return " — ou — ".join(_describe(facts) for facts in self.fact_sets)
+
+
+def _describe(facts: list[Fact]) -> str:
+    parts = []
+    for f in facts:
+        if f.kind == "label":
+            parts.append(f"{f.name} : {f.value}")
+        else:
+            value = float(f.value) if isinstance(f.value, int | float) else 0.0
+            parts.append(f"{f.name} : {_fmt(value)}{' %' if f.unit == '%' else ''}")
+    return " ; ".join(parts)
 
 
 def _fmt(value: float) -> str:
@@ -120,7 +132,7 @@ def _label(name: str, value: str, *aliases: str) -> Fact:
 
 ABSTAIN = [Fact(name="reconnaît que les données ne le permettent pas", kind="abstain")]
 
-Reference = Callable[[pd.DataFrame], list[Fact]]
+Reference = Callable[[pd.DataFrame], "list[Fact] | tuple[list[Fact], list[list[Fact]]]"]
 
 # Traductions acceptees pour les etiquettes, dans l'ordre ou l'agent peut les ecrire.
 LABEL_ALIASES: dict[str, tuple[str, ...]] = {
@@ -136,6 +148,9 @@ LABEL_ALIASES: dict[str, tuple[str, ...]] = {
     "MntWines": ("vin", "vins", "wine", "wines"),
     "MntMeatProducts": ("viande", "viandes", "meat"),
     "West": ("ouest",),
+    "Telephones and Communication": ("telephones et communication", "telephonie et communication"),
+    "Office Machines": ("machines de bureau",),
+    "Binders and Binder Accessories": ("classeurs et accessoires de classeurs", "classeurs"),
 }
 
 
@@ -192,9 +207,15 @@ def _ref_segment(df: pd.DataFrame) -> list[Fact]:
     ]
 
 
-def _ref_ca_annuel(df: pd.DataFrame) -> list[Fact]:
+def _ref_ca_annuel(df: pd.DataFrame) -> tuple[list[Fact], list[list[Fact]]]:
     sales = df.groupby(df["Order Date"].dt.year)["Sales"].sum()
-    return [_num(f"chiffre d'affaires {y}", v) for y, v in sales.items()]
+    amounts = [_num(f"chiffre d'affaires {y}", v) for y, v in sales.items()]
+    change = sales.pct_change().dropna() * 100
+    variations = [
+        _num(f"variation {y}", v, unit="%", ignore_sign=True, abs_tol=0.3)
+        for y, v in change.items()
+    ]
+    return amounts, [variations]
 
 
 def _ref_profit_2011_2012(df: pd.DataFrame) -> list[Fact]:
@@ -243,7 +264,7 @@ def _ref_facture_churn(df: pd.DataFrame) -> list[Fact]:
 
 def _ref_top_sous_categories(df: pd.DataFrame) -> list[Fact]:
     top = df.groupby("Product Sub-Category")["Profit"].sum().nlargest(3)
-    return [_label(f"n°{i} des sous-catégories", str(k)) for i, k in enumerate(top.index, 1)]
+    return [_labelled(f"n°{i} des sous-catégories", str(k)) for i, k in enumerate(top.index, 1)]
 
 
 def _ref_region(df: pd.DataFrame) -> list[Fact]:
@@ -351,34 +372,42 @@ def build(data_dir: Path, csv_for: Callable[[str], Path | None]) -> list[GoldenC
             if path is None:
                 raise FileNotFoundError(f"Jeu '{dataset}' absent de {data_dir}")
             frames[dataset] = load_frame(path)
-        facts = reference(frames[dataset])
-        cases.append(GoldenCase(case_id, category, dataset, question, facts, note))
+        facts, alternatives = expected(reference(frames[dataset]))
+        cases.append(GoldenCase(case_id, category, dataset, question, facts, note, alternatives))
     return cases
+
+
+def expected(
+    result: list[Fact] | tuple[list[Fact], list[list[Fact]]],
+) -> tuple[list[Fact], list[list[Fact]]]:
+    """Une reference rend ses faits, ou ses faits et des formulations alternatives."""
+    return result if isinstance(result, tuple) else (result, [])
 
 
 # --------------------------------------------------------------------------- serialisation
 
 
 def dump(cases: list[GoldenCase], path: Path) -> None:
-    payload = [
-        {**asdict(c), "reference_answer": c.reference_answer, "facts": [asdict(f) for f in c.facts]}
-        for c in cases
-    ]
+    payload = [{**asdict(c), "reference_answer": c.reference_answer} for c in cases]
     path.write_text(json.dumps(payload, ensure_ascii=False, indent=2) + "\n")
 
 
 def load(path: Path) -> list[GoldenCase]:
     cases = []
     for raw in json.loads(path.read_text()):
-        facts = [Fact(**{**f, "aliases": tuple(f.get("aliases", ()))}) for f in raw["facts"]]
+
+        def facts_of(items: list[dict]) -> list[Fact]:
+            return [Fact(**{**f, "aliases": tuple(f.get("aliases", ()))}) for f in items]
+
         cases.append(
             GoldenCase(
                 id=raw["id"],
                 category=raw["category"],
                 dataset=raw["dataset"],
                 question=raw["question"],
-                facts=facts,
+                facts=facts_of(raw["facts"]),
                 note=raw.get("note", ""),
+                alternatives=[facts_of(alt) for alt in raw.get("alternatives", [])],
             )
         )
     return cases

@@ -35,3 +35,6 @@ htmlcov/
 .DS_Store
 .idea/
 *.swp
+
+# Detail brut de l evaluation : contient des extraits de donnees (cadrage Wavestone)
+docs/eval/resultats.json

@@ -1,6 +1,6 @@
 """Fait tourner l'agent sur le golden dataset et mesure la qualite de ses reponses.
 
-    uv run python scripts/run_golden.py                       # les 24 questions (~40 min)
+    uv run python scripts/run_golden.py                       # les 24 questions (~25 min)
     uv run python scripts/run_golden.py --category agregat    # une categorie
     uv run python scripts/run_golden.py --case agr_churn      # une question
     uv run python scripts/run_golden.py --juge                # ajoute la note de pertinence
@@ -28,6 +28,7 @@ from agent_data.graph import RunTrace, Stage1  # noqa: E402
 from agent_data.rendering import synthesize  # noqa: E402
 from agent_data.rendering.synthesis import describe_artifacts  # noqa: E402
 from agent_data.sandbox import docker_available  # noqa: E402
+from agent_data.schemas import Artifact  # noqa: E402
 
 ROOT = Path(__file__).resolve().parent.parent
 EVAL_DIR = ROOT / "docs/eval"
@@ -36,6 +37,16 @@ EVAL_DIR = ROOT / "docs/eval"
 def csv_for(dataset: str) -> Path | None:
     folder = DATA_DIR / dataset
     return next(iter(sorted(folder.glob("*.csv"))), None) if folder.exists() else None
+
+
+def rescore(data: dict, cases: list[golden.GoldenCase]) -> None:
+    """Recalcule les notes de chaque reponse enregistree (sans relancer l'agent)."""
+    by_id = {c.id: c for c in cases}
+    for r in data["results"]:
+        kept = [Artifact.model_validate(a) for a in r.get("kept", [])]
+        r["score"] = asdict(metrics.score_case(by_id[r["id"]], r["answer"], kept))
+        r["reference"] = by_id[r["id"]].reference_answer
+    data["summary"] = metrics.summarize([metrics.CaseScore(**r["score"]) for r in data["results"]])
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -48,11 +59,21 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--rapport", action="store_true", help="Regenere le rapport depuis le JSON, sans run"
     )
+    parser.add_argument(
+        "--rescore",
+        action="store_true",
+        help="Re-note les reponses enregistrees avec golden.json et les metriques actuels",
+    )
     args = parser.parse_args(argv)
     out = Path(args.out)
 
-    if args.rapport:
+    if args.rapport or args.rescore:
         data = json.loads(out.with_suffix(".json").read_text())
+        if args.rescore:
+            rescore(data, golden.load(Path(args.golden)))
+            out.with_suffix(".json").write_text(
+                json.dumps(data, ensure_ascii=False, indent=2) + "\n"
+            )
         out.with_suffix(".md").write_text(report.render(data["results"], data["meta"]))
         print(f"Rapport : {out.with_suffix('.md')}")
         return 0
@@ -121,6 +142,8 @@ def main(argv: list[str] | None = None) -> int:
                 "artifacts": len(artifacts),
                 # Ce que la synthese a vu : sert de contexte a scripts/ragas_golden.py.
                 "context": describe_artifacts(artifacts, max_rows=50),
+                # Les resultats hors donnees brutes : de quoi re-noter sans relancer l'agent.
+                "kept": [a.model_dump(mode="json") for a in metrics.results_only(artifacts)],
             }
         )
 

@@ -71,6 +71,8 @@ ABSTAIN_MARKERS = (
     "ne figurent pas",
     "aucun resultat",
     "ne dispose pas",
+    "ne disposons pas",
+    "ne disposent pas",
     "n'est pas renseigne",
     "hors du perimetre",
 )
@@ -117,6 +119,9 @@ def number_matches(fact: Fact, candidates: Iterable[float]) -> bool:
     targets = [float(fact.value)]
     if fact.unit == "%":
         targets.append(float(fact.value) / 100)  # 26,5 % ecrit 0,265
+    if fact.ignore_sign:
+        targets = [abs(t) for t in targets]
+        candidates = [abs(c) for c in candidates]
     return any(_close(c, t, fact) for c in candidates for t in targets)
 
 
@@ -158,11 +163,42 @@ def _walk_numbers(value: Any) -> Iterable[float]:
             yield from _walk_numbers(v)
 
 
+RAW_ROWS = 100
+"""Au-dela, une table ou une serie de figure est un extrait de donnees, pas un resultat."""
+
+
+def _raw_trace(trace: Any) -> bool:
+    return isinstance(trace, dict) and any(
+        isinstance(v, list) and len(v) > RAW_ROWS for v in trace.values()
+    )
+
+
+def results_only(artifacts: list[Artifact]) -> list[Artifact]:
+    """Retire les extraits de donnees brutes (tables longues, nuages de points).
+
+    Un extrait de 2 240 lignes contient presque n'importe quel nombre : le compter comme
+    « resultat » gonflerait le rappel du contexte et la fidelite. C'est aussi ce que
+    `run_golden.py` conserve pour pouvoir re-noter une evaluation sans relancer l'agent.
+    """
+    kept = []
+    for art in artifacts:
+        payload = art.payload
+        if payload.kind == "table" and len(payload.rows) > RAW_ROWS:
+            continue
+        if payload.kind == "figure":
+            data = [t for t in payload.spec.get("data", []) if not _raw_trace(t)]
+            art = art.model_copy(
+                update={"payload": payload.model_copy(update={"spec": {"data": data}})}
+            )
+        kept.append(art)
+    return kept
+
+
 def artifacts_content(artifacts: list[Artifact]) -> tuple[str, list[float]]:
-    """Tout le texte et tous les nombres des resultats de l'etage 1."""
+    """Le texte et les nombres des resultats de l'etage 1, hors donnees brutes."""
     texts: list[str] = []
     numbers: list[float] = []
-    for art in artifacts:
+    for art in results_only(artifacts):
         texts.append(art.title)
         payload = art.payload
         if payload.kind == "table":
@@ -200,11 +236,16 @@ def _claimable(value: float, question: str) -> bool:
     return value not in numbers_in(question)
 
 
+def claims_in(answer: str, question: str) -> list[float]:
+    """Les chiffres que la reponse avance (hors annees, petits entiers, chiffres de la question)."""
+    return [n for n in numbers_in(answer) if _claimable(n, question)]
+
+
 def faithfulness(
     answer: str, numbers: list[float], question: str
 ) -> tuple[float | None, list[float]]:
     """Part des chiffres de la reponse retrouves dans les resultats (a 1 % pres)."""
-    claims = [n for n in numbers_in(answer) if _claimable(n, question)]
+    claims = claims_in(answer, question)
     if not claims:
         return None, []
     unsupported = []
@@ -224,8 +265,10 @@ def score_case(case: GoldenCase, answer: str, artifacts: list[Artifact]) -> Case
     did_abstain = abstains(answer)
 
     if any(f.kind == "abstain" for f in case.facts):
-        # Une abstention qui avance quand meme des chiffres inventes n'en est pas une.
-        honest = did_abstain and not unsupported
+        # Hors perimetre, la seule bonne reponse est de dire qu'on ne peut pas repondre.
+        # Une reponse qui previent puis avance un chiffre de substitution (le profit comme
+        # « satisfaction ») echoue : le decideur retiendrait le chiffre.
+        honest = did_abstain and not claims_in(answer, case.question)
         return CaseScore(
             case.id,
             case.category,
@@ -238,18 +281,23 @@ def score_case(case: GoldenCase, answer: str, artifacts: list[Artifact]) -> Case
             unsupported=unsupported,
         )
 
-    found = [fact_in(f, answer, answer_numbers) for f in case.facts]
-    in_context = [fact_in(f, context_text, context_numbers) for f in case.facts]
-    correctness = sum(found) / len(case.facts)
+    # La reponse est jugee sur la formulation attendue qu'elle couvre le mieux.
+    # En cas d'egalite, max garde le premier ensemble : la formulation principale.
+    scored = []
+    for facts in case.fact_sets:
+        hits = [fact_in(f, answer, answer_numbers) for f in facts]
+        scored.append((sum(hits) / len(facts), facts, hits))
+    correctness, facts, found = max(scored, key=lambda item: item[0])
+    in_context = [fact_in(f, context_text, context_numbers) for f in facts]
     return CaseScore(
         case.id,
         case.category,
         answer_correctness=correctness,
-        context_recall=sum(in_context) / len(case.facts),
+        context_recall=sum(in_context) / len(facts),
         faithfulness=faith,
         abstained=did_abstain,
         passed=correctness == 1.0,
-        missing=[f.name for f, ok in zip(case.facts, found, strict=True) if not ok],
+        missing=[f.name for f, ok in zip(facts, found, strict=True) if not ok],
         unsupported=unsupported,
     )
 
