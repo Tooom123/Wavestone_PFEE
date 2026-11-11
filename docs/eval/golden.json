@@ -12,10 +12,12 @@
         "unit": "%",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "",
+    "alternatives": [],
     "reference_answer": "taux de résiliation : 26,5 %"
   },
   {
@@ -31,7 +33,8 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       },
       {
         "name": "profit total",
@@ -40,10 +43,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "",
+    "alternatives": [],
     "reference_answer": "chiffre d'affaires total : 14 915 601 ; profit total : 1 521 768"
   },
   {
@@ -59,10 +64,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "24 revenus manquants, ignorés dans la moyenne",
+    "alternatives": [],
     "reference_answer": "revenu annuel moyen : 52 247"
   },
   {
@@ -78,10 +85,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "",
+    "alternatives": [],
     "reference_answer": "facture mensuelle moyenne : 64,8"
   },
   {
@@ -97,7 +106,8 @@
         "unit": "%",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       },
       {
         "name": "taux de résiliation (One year)",
@@ -106,7 +116,8 @@
         "unit": "%",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       },
       {
         "name": "taux de résiliation (Two year)",
@@ -115,10 +126,12 @@
         "unit": "%",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "",
+    "alternatives": [],
     "reference_answer": "taux de résiliation (Month-to-month) : 42,7 % ; taux de résiliation (One year) : 11,3 % ; taux de résiliation (Two year) : 2,8 %"
   },
   {
@@ -134,7 +147,8 @@
         "unit": "%",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       },
       {
         "name": "taux de résiliation des autres",
@@ -143,10 +157,12 @@
         "unit": "%",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "",
+    "alternatives": [],
     "reference_answer": "taux de résiliation des seniors : 41,7 % ; taux de résiliation des autres : 23,6 %"
   },
   {
@@ -162,7 +178,8 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       },
       {
         "name": "dépense moyenne sans enfants",
@@ -171,10 +188,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "dépense = somme des six colonnes Mnt*",
+    "alternatives": [],
     "reference_answer": "dépense moyenne avec enfants : 406,6 ; dépense moyenne sans enfants : 1 106"
   },
   {
@@ -194,7 +213,8 @@
           "entreprise",
           "entreprises",
           "grands comptes"
-        ]
+        ],
+        "ignore_sign": false
       },
       {
         "name": "son chiffre d'affaires",
@@ -203,10 +223,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "",
+    "alternatives": [],
     "reference_answer": "segment le plus important : Corporate ; son chiffre d'affaires : 5 498 905"
   },
   {
@@ -222,7 +244,8 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       },
       {
         "name": "chiffre d'affaires 2010",
@@ -231,7 +254,8 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       },
       {
         "name": "chiffre d'affaires 2011",
@@ -240,7 +264,8 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       },
       {
         "name": "chiffre d'affaires 2012",
@@ -249,11 +274,46 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "",
-    "reference_answer": "chiffre d'affaires 2009 : 4 209 139 ; chiffre d'affaires 2010 : 3 549 681 ; chiffre d'affaires 2011 : 3 436 817 ; chiffre d'affaires 2012 : 3 719 964"
+    "alternatives": [
+      [
+        {
+          "name": "variation 2010",
+          "kind": "number",
+          "value": -15.6673,
+          "unit": "%",
+          "rel_tol": 0.03,
+          "abs_tol": 0.3,
+          "aliases": [],
+          "ignore_sign": true
+        },
+        {
+          "name": "variation 2011",
+          "kind": "number",
+          "value": -3.1796,
+          "unit": "%",
+          "rel_tol": 0.03,
+          "abs_tol": 0.3,
+          "aliases": [],
+          "ignore_sign": true
+        },
+        {
+          "name": "variation 2012",
+          "kind": "number",
+          "value": 8.2386,
+          "unit": "%",
+          "rel_tol": 0.03,
+          "abs_tol": 0.3,
+          "aliases": [],
+          "ignore_sign": true
+        }
+      ]
+    ],
+    "reference_answer": "chiffre d'affaires 2009 : 4 209 139 ; chiffre d'affaires 2010 : 3 549 681 ; chiffre d'affaires 2011 : 3 436 817 ; chiffre d'affaires 2012 : 3 719 964 — ou — variation 2010 : -15,7 % ; variation 2011 : -3,2 % ; variation 2012 : 8,2 %"
   },
   {
     "id": "tmp_profit",
@@ -268,7 +328,8 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       },
       {
         "name": "profit 2012",
@@ -277,10 +338,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "",
+    "alternatives": [],
     "reference_answer": "profit 2011 : 381 456 ; profit 2012 : 341 902"
   },
   {
@@ -296,7 +359,8 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       },
       {
         "name": "nouveaux clients 2013",
@@ -305,7 +369,8 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       },
       {
         "name": "nouveaux clients 2014",
@@ -314,10 +379,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "année d'inscription = Dt_Customer",
+    "alternatives": [],
     "reference_answer": "nouveaux clients 2012 : 494 ; nouveaux clients 2013 : 1 189 ; nouveaux clients 2014 : 557"
   },
   {
@@ -333,7 +400,8 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       },
       {
         "name": "nombre de commandes cette année-là",
@@ -342,10 +410,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "une commande = un Order ID distinct",
+    "alternatives": [],
     "reference_answer": "année avec le plus de commandes : 2009 ; nombre de commandes cette année-là : 1 394"
   },
   {
@@ -361,7 +431,8 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       },
       {
         "name": "ancienneté moyenne des fidèles (mois)",
@@ -370,10 +441,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "",
+    "alternatives": [],
     "reference_answer": "ancienneté moyenne des partants (mois) : 18,0 ; ancienneté moyenne des fidèles (mois) : 37,6"
   },
   {
@@ -389,10 +462,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": 0.03,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "corrélation de Pearson",
+    "alternatives": [],
     "reference_answer": "corrélation revenu / vin : 0,579"
   },
   {
@@ -408,10 +483,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": 0.03,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "corrélation de Pearson, ligne à ligne",
+    "alternatives": [],
     "reference_answer": "corrélation remise / profit : -0,0371"
   },
   {
@@ -427,7 +504,8 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       },
       {
         "name": "facture moyenne des fidèles",
@@ -436,10 +514,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "",
+    "alternatives": [],
     "reference_answer": "facture moyenne des partants : 74,4 ; facture moyenne des fidèles : 61,3"
   },
   {
@@ -455,7 +535,11 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [
+          "telephones et communication",
+          "telephonie et communication"
+        ],
+        "ignore_sign": false
       },
       {
         "name": "n°2 des sous-catégories",
@@ -464,7 +548,10 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [
+          "machines de bureau"
+        ],
+        "ignore_sign": false
       },
       {
         "name": "n°3 des sous-catégories",
@@ -473,10 +560,15 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [
+          "classeurs et accessoires de classeurs",
+          "classeurs"
+        ],
+        "ignore_sign": false
       }
     ],
     "note": "rentabilité = profit total",
+    "alternatives": [],
     "reference_answer": "n°1 des sous-catégories : Telephones and Communication ; n°2 des sous-catégories : Office Machines ; n°3 des sous-catégories : Binders and Binder Accessories"
   },
   {
@@ -494,7 +586,8 @@
         "abs_tol": null,
         "aliases": [
           "ouest"
-        ]
+        ],
+        "ignore_sign": false
       },
       {
         "name": "ses ventes",
@@ -503,10 +596,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "",
+    "alternatives": [],
     "reference_answer": "région en tête : West ; ses ventes : 3 597 549"
   },
   {
@@ -527,7 +622,8 @@
           "vins",
           "wine",
           "wines"
-        ]
+        ],
+        "ignore_sign": false
       },
       {
         "name": "dépense totale dans cette catégorie",
@@ -536,10 +632,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "",
+    "alternatives": [],
     "reference_answer": "catégorie la plus dépensée : MntWines ; dépense totale dans cette catégorie : 680 816"
   },
   {
@@ -557,7 +655,8 @@
         "abs_tol": null,
         "aliases": [
           "cheque electronique"
-        ]
+        ],
+        "ignore_sign": false
       },
       {
         "name": "son taux de résiliation",
@@ -566,10 +665,12 @@
         "unit": "%",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "",
+    "alternatives": [],
     "reference_answer": "moyen de paiement le plus exposé : Electronic check ; son taux de résiliation : 45,3 %"
   },
   {
@@ -585,10 +686,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "aucune colonne d'appels",
+    "alternatives": [],
     "reference_answer": "Les données ne permettent pas de répondre ; la réponse doit le dire."
   },
   {
@@ -604,10 +707,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "aucune colonne de satisfaction",
+    "alternatives": [],
     "reference_answer": "Les données ne permettent pas de répondre ; la réponse doit le dire."
   },
   {
@@ -623,10 +728,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "aucune donnée de localisation",
+    "alternatives": [],
     "reference_answer": "Les données ne permettent pas de répondre ; la réponse doit le dire."
   },
   {
@@ -642,10 +749,12 @@
         "unit": "",
         "rel_tol": 0.03,
         "abs_tol": null,
-        "aliases": []
+        "aliases": [],
+        "ignore_sign": false
       }
     ],
     "note": "les commandes s'arrêtent fin 2012",
+    "alternatives": [],
     "reference_answer": "Les données ne permettent pas de répondre ; la réponse doit le dire."
   }
 ]

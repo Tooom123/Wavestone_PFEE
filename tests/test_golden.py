@@ -92,8 +92,9 @@ def frames() -> dict[str, pd.DataFrame]:
 
 def test_chaque_reference_tourne_et_rend_des_faits(frames: dict[str, pd.DataFrame]) -> None:
     for case_id, _category, dataset, _question, reference, _note in golden.QUESTIONS:
-        facts = reference(frames[dataset])
-        assert facts and all(isinstance(f, Fact) for f in facts), case_id
+        facts, alternatives = golden.expected(reference(frames[dataset]))
+        for fact_set in [facts, *alternatives]:
+            assert fact_set and all(isinstance(f, Fact) for f in fact_set), case_id
 
 
 def test_references_exactes_sur_un_cas_connu(frames: dict[str, pd.DataFrame]) -> None:
@@ -293,3 +294,87 @@ def test_rapport_avec_juge_et_ragas() -> None:
     text = report.render([_result(score, relevance=0.75, ragas=ragas)], META | {"ragas_judge": "q"})
     assert "Pertinence (juge)" in text and "RAGAS fidélité" in text and "juge RAGAS : q" in text
     assert "| 75 % |" in text and "| 50 % |" in text
+
+
+# ------------------------------------------- corrections apres le premier passage reel
+
+
+def test_variation_ecrite_sans_signe() -> None:
+    fact = Fact("variation 2010", "number", -15.67, "%", abs_tol=0.3, ignore_sign=True)
+    assert metrics.number_matches(fact, metrics.numbers_in("une baisse d'environ 15,7 %"))
+    assert not metrics.number_matches(fact, [8.2])
+
+
+AMOUNTS = [Fact("ca 2009", "number", 4_209_139.0), Fact("ca 2010", "number", 3_549_681.0)]
+VARIATIONS = [Fact("variation 2010", "number", -15.67, "%", abs_tol=0.3, ignore_sign=True)]
+EVOLUTION = GoldenCase("tmp", "temporel", "superstore", "?", AMOUNTS, alternatives=[VARIATIONS])
+
+
+def test_formulation_alternative_acceptee() -> None:
+    score = metrics.score_case(EVOLUTION, "Le chiffre d'affaires recule de 15,7 % en 2010.", [])
+    assert score.passed and score.missing == []
+
+
+def test_sans_formulation_complete_les_manques_viennent_de_la_principale() -> None:
+    score = metrics.score_case(EVOLUTION, "4 209 139 € en 2009.", [])
+    assert not score.passed and score.missing == ["ca 2010"]
+
+
+def test_le_golden_accepte_les_variations_annuelles() -> None:
+    [case] = [c for c in golden.load(GOLDEN) if c.id == "tmp_ca_annuel"]
+    assert case.alternatives and all(f.ignore_sign for f in case.alternatives[0])
+    assert " — ou — " in case.reference_answer
+
+
+def test_noms_traduits_acceptes() -> None:
+    [case] = [c for c in golden.load(GOLDEN) if c.id == "cls_sous_categories"]
+    answer = (
+        "Téléphones et Communication, puis Machines de bureau, "
+        "puis Classeurs et accessoires de classeurs."
+    )
+    assert metrics.score_case(case, answer, []).passed
+
+
+def test_un_extrait_de_donnees_brutes_ne_compte_pas_comme_resultat() -> None:
+    raw = _artifact([[i, 406.6 if i == 7 else i] for i in range(150)], ["ID", "Total"])
+    case = GoldenCase("x", "comparaison", "personality", "?", [Fact("dépense", "number", 406.6)])
+    assert metrics.score_case(case, "", [raw]).context_recall == 0.0
+    assert (
+        metrics.score_case(case, "", [_artifact([["avec", 406.6]], ["g", "m"])]).context_recall
+        == 1.0
+    )
+
+
+def test_results_only_retire_les_tables_et_series_longues() -> None:
+    from agent_data.schemas import Figure
+
+    long_table = _artifact([[i] for i in range(101)], ["x"])
+    figure = Artifact(
+        id="f",
+        step_id="s",
+        title="Nuage",
+        payload=Figure(spec={"data": [{"y": list(range(500))}, {"y": [1.5, 2.5]}]}),
+    )
+    kept = metrics.results_only([long_table, figure, ARTIFACTS[0]])
+    assert [a.title for a in kept] == ["Nuage", "Résultat"]
+    assert kept[0].payload.spec["data"] == [{"y": [1.5, 2.5]}]
+
+
+SATISFACTION = GoldenCase(
+    "hors_satisfaction", "hors_perimetre", "superstore", "Satisfaction ?", list(golden.ABSTAIN)
+)
+
+
+def test_abstention_suivie_d_un_substitut_chiffre_echoue() -> None:
+    answer = (
+        "Nous ne disposons pas d'une note de satisfaction ; le profit moyen, utilisé comme "
+        "indicateur, est de 255,46 dans les Territoires du Nord-Ouest."
+    )
+    support = _artifact([["Northwest Territories", 255.46]], ["Region", "Profit"])
+    score = metrics.score_case(SATISFACTION, answer, [support])
+    assert score.abstained and not score.passed
+
+
+def test_abstention_sans_chiffre_reussit() -> None:
+    answer = "Nous ne disposons pas de note de satisfaction dans ces données."
+    assert metrics.score_case(SATISFACTION, answer, []).passed
