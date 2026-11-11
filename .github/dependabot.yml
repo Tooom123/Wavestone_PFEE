@@ -1,37 +1,54 @@
+# Une seule PR groupée par écosystème, une fois par mois, et au plus une ouverte à la fois.
+# Les correctifs de sécurité restent actifs (réglage du dépôt) et sont, eux aussi, groupés.
 version: 2
 updates:
   - package-ecosystem: uv
     directory: /
     target-branch: develop
-    schedule: { interval: weekly, day: monday }
-    open-pull-requests-limit: 5
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 1
     groups:
-      python-minor-patch:
-        update-types: [minor, patch]
+      python:
+        patterns: ["*"]
+      python-securite:
+        applies-to: security-updates
+        patterns: ["*"]
     commit-message: { prefix: "Deps" }
     labels: [dependencies, python]
 
   - package-ecosystem: npm
     directory: /web
     target-branch: develop
-    schedule: { interval: weekly, day: monday }
-    open-pull-requests-limit: 5
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 1
+    ignore:
+      # Les types suivent la version de Node de la CI et de Vercel (20), pas la dernière.
+      - dependency-name: "@types/node"
+        update-types: ["version-update:semver-major"]
     groups:
-      web-minor-patch:
-        update-types: [minor, patch]
+      web:
+        patterns: ["*"]
+      web-securite:
+        applies-to: security-updates
+        patterns: ["*"]
     commit-message: { prefix: "Deps" }
     labels: [dependencies, web]
 
   - package-ecosystem: github-actions
     directory: /
     target-branch: develop
-    schedule: { interval: weekly, day: monday }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 1
+    groups:
+      actions:
+        patterns: ["*"]
     commit-message: { prefix: "CI" }
     labels: [dependencies, ci]
 
   - package-ecosystem: docker
     directory: /docker
     target-branch: develop
-    schedule: { interval: weekly, day: monday }
+    schedule: { interval: monthly }
+    open-pull-requests-limit: 1
     commit-message: { prefix: "Docker" }
     labels: [dependencies, docker]

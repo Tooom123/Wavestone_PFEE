@@ -1,7 +1,7 @@
 # CI/CD
 
 Tout est dans `.github/workflows/`. Chaque action tierce est épinglée par son SHA de commit
-(supply-chain) ; Dependabot propose les mises à jour chaque semaine.
+(supply-chain) ; Dependabot propose une PR groupée par écosystème chaque mois.
 
 ```mermaid
 flowchart LR
