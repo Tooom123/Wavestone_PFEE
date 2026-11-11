@@ -197,7 +197,7 @@ src/agent_data/
 web/               front Next.js (deploye sur Vercel)
 docker/            image du sandbox et helpers injectes dedans
 data/              jeux de donnees locaux (non versionnes)
-scripts/           setup.sh, download_data.py, run_eval.py, bench_models.py, demo.sh
+scripts/           setup.sh, download_data.py, run_eval.py, run_golden.py, bench_models.py, demo.sh
 tests/
 ```
 
@@ -226,6 +226,19 @@ Derniere execution complete : **24/24 controles reussis**.
 Le nombre d'iterations varie d'un run a l'autre : la generation de code n'est pas
 deterministe, meme a temperature 0 (le plan, lui, l'est). Juger sur plusieurs runs.
 
+### Golden dataset
+
+24 questions en 6 categories, dont la bonne reponse est calculee par pandas et figee dans
+[`docs/eval/golden.json`](docs/eval/golden.json). Metriques inspirees de RAGAS (exactitude,
+rappel du contexte, fidelite), plus une notation RAGAS optionnelle avec un juge local :
+
+```bash
+uv run python scripts/run_golden.py       # ~35 min, rapport dans docs/eval/resultats.md
+uv run scripts/ragas_golden.py            # optionnel : notes RAGAS
+```
+
+Methode, test de RAGAS et limites : [`docs/eval/README.md`](docs/eval/README.md).
+
 ## Jeux de donnees
 
 Trois jeux couvrent les trois familles d'analyse du perimetre. `./scripts/setup.sh` les
@@ -243,6 +256,8 @@ telecharge ; `uv run python scripts/download_data.py` aussi.
 - [`docs/adr/`](docs/adr/) — les décisions d'architecture et leurs raisons
 - [`docs/git-workflow.md`](docs/git-workflow.md) — branches, PR, livraison
 - [`docs/ci-cd.md`](docs/ci-cd.md) — pipeline, déploiement
+- [`docs/eval/`](docs/eval/) — golden dataset, métriques, test de RAGAS
+- [`docs/finops/`](docs/finops/) — coûts on-premise contre cloud
 
 ## Conventions
 
