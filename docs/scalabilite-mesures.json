@@ -1,0 +1,161 @@
+{
+  "cpu": 28,
+  "results": [
+    {
+      "task": "profil_pandas",
+      "seconds": 20.21,
+      "peak_mb": 836,
+      "fits_sandbox": true,
+      "ok": true,
+      "result": "1167461",
+      "error": "",
+      "size_gb": 0.25,
+      "rows": 1167461
+    },
+    {
+      "task": "profil_duckdb",
+      "seconds": 4.11,
+      "peak_mb": 933,
+      "fits_sandbox": true,
+      "ok": true,
+      "result": "1167461",
+      "error": "",
+      "size_gb": 0.25,
+      "rows": 1167461
+    },
+    {
+      "task": "agregat_pandas_complet",
+      "seconds": 2.09,
+      "peak_mb": 827,
+      "fits_sandbox": true,
+      "ok": true,
+      "result": "517074976.818",
+      "error": "",
+      "size_gb": 0.25,
+      "rows": 1167461
+    },
+    {
+      "task": "agregat_pandas_usecols",
+      "seconds": 1.07,
+      "peak_mb": 261,
+      "fits_sandbox": true,
+      "ok": true,
+      "result": "517074976.818",
+      "error": "",
+      "size_gb": 0.25,
+      "rows": 1167461
+    },
+    {
+      "task": "demarrage_python",
+      "seconds": 0.01,
+      "peak_mb": 13,
+      "fits_sandbox": true,
+      "ok": true,
+      "result": "0",
+      "error": "",
+      "size_gb": 0.25,
+      "rows": 1167461
+    },
+    {
+      "task": "agregat_duckdb_2_coeurs",
+      "seconds": 0.34,
+      "peak_mb": 207,
+      "fits_sandbox": true,
+      "ok": true,
+      "result": "517074976.81802124",
+      "error": "",
+      "size_gb": 0.25,
+      "rows": 1167461
+    },
+    {
+      "task": "agregat_duckdb_parquet_2_coeurs",
+      "seconds": 0.06,
+      "peak_mb": 69,
+      "fits_sandbox": true,
+      "ok": true,
+      "result": "517074976.8180188",
+      "error": "",
+      "size_gb": 0.028,
+      "rows": 1167461,
+      "csv_size_gb": 0.25
+    },
+    {
+      "task": "profil_pandas",
+      "seconds": 79.14,
+      "peak_mb": 2953,
+      "fits_sandbox": false,
+      "ok": true,
+      "result": "4611051",
+      "error": "",
+      "size_gb": 1.0,
+      "rows": 4611051
+    },
+    {
+      "task": "profil_duckdb",
+      "seconds": 6.44,
+      "peak_mb": 1334,
+      "fits_sandbox": true,
+      "ok": true,
+      "result": "\u2588\u2588\u2588\u2588\u258f (00:00:02.79 elapsed)     \n4611051",
+      "error": "",
+      "size_gb": 1.0,
+      "rows": 4611051
+    },
+    {
+      "task": "agregat_pandas_complet",
+      "seconds": 7.87,
+      "peak_mb": 2927,
+      "fits_sandbox": false,
+      "ok": true,
+      "result": "2042260160.238",
+      "error": "",
+      "size_gb": 1.0,
+      "rows": 4611051
+    },
+    {
+      "task": "agregat_pandas_usecols",
+      "seconds": 3.72,
+      "peak_mb": 687,
+      "fits_sandbox": true,
+      "ok": true,
+      "result": "2042260160.238",
+      "error": "",
+      "size_gb": 1.0,
+      "rows": 4611051
+    },
+    {
+      "task": "demarrage_python",
+      "seconds": 0.01,
+      "peak_mb": 13,
+      "fits_sandbox": true,
+      "ok": true,
+      "result": "0",
+      "error": "",
+      "size_gb": 1.0,
+      "rows": 4611051
+    },
+    {
+      "task": "agregat_duckdb_2_coeurs",
+      "seconds": 0.91,
+      "peak_mb": 249,
+      "fits_sandbox": true,
+      "ok": true,
+      "result": "2042260160.2377381",
+      "error": "",
+      "size_gb": 1.0,
+      "rows": 4611051
+    },
+    {
+      "task": "agregat_duckdb_parquet_2_coeurs",
+      "seconds": 0.07,
+      "peak_mb": 71,
+      "fits_sandbox": true,
+      "ok": true,
+      "result": "2042260160.2377386",
+      "error": "",
+      "size_gb": 0.11,
+      "rows": 4611051,
+      "csv_size_gb": 1.0
+    }
+  ]
+}
