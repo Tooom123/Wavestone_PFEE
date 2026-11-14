@@ -84,6 +84,8 @@ export function runReducer(state: RunState, action: Action): RunState {
       return { ...state, iterations: patchLast({ execution: e }) };
     case "critique":
       return { ...state, iterations: patchLast({ critique: e }) };
+    case "guardrail":
+      return state; // recapitules dans le rapport final (metrics.guardrails)
     case "done":
       return { ...state, phase: "done", report: e.report, metrics: e.metrics, warnings: e.errors, current: undefined, finishedAt: Date.now() };
     case "error":
