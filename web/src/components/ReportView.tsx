@@ -2,6 +2,7 @@ import type { Artifact, Report, RunMetrics } from "@/lib/types";
 import { DataTable } from "./DataTable";
 import { Plot } from "./Plot";
 import { RoleBadge } from "./RoleBadge";
+import { Guardrails } from "./Guardrails";
 import { RunCost } from "./RunCost";
 
 function ArtifactView({ artifact }: { artifact: Artifact }) {
@@ -65,6 +66,7 @@ export function ReportView({ report, model, metrics }: { report: Report; model?:
           </div>
         </>
       )}
+      {metrics?.guardrails && <Guardrails items={metrics.guardrails} />}
       {metrics && <RunCost metrics={metrics} />}
       <footer>
         <button onClick={download}>Télécharger le rapport (JSON)</button>

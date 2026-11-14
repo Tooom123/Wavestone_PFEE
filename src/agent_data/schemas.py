@@ -17,7 +17,7 @@ from datetime import datetime
 from enum import StrEnum
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, ConfigDict, Field
+from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 
 class Base(BaseModel):
@@ -70,6 +70,13 @@ class ColumnProfile(Base):
             "orienter le plan, pas a transmettre les donnees."
         ),
     )
+    date_range: tuple[str, str] | None = Field(
+        default=None,
+        description=(
+            "Premiere et derniere date d'une colonne de dates (ISO). Permet au planificateur "
+            "de voir qu'une question sur une periode non couverte est hors perimetre."
+        ),
+    )
 
 
 class DatasetProfile(Base):
@@ -115,8 +122,21 @@ class AnalysisPlan(Base):
         description="Definitions retenues quand la question est ambigue (ex. ce qu'est une "
         "'bonne' vente)",
     )
-    steps: list[AnalysisStep] = Field(min_length=1)
+    steps: list[AnalysisStep] = Field(default_factory=list)
     datasets: list[str] = Field(default_factory=list, description="Noms des datasets mobilises")
+    answerable: bool = Field(
+        default=True,
+        description="Faux quand les donnees ne permettent pas de repondre a la question",
+    )
+    unanswerable_reason: str = Field(
+        default="", description="Ce qui manque dans les donnees, quand answerable est faux"
+    )
+
+    @model_validator(mode="after")
+    def _steps_if_answerable(self) -> AnalysisPlan:
+        if self.answerable and not self.steps:
+            raise ValueError("Un plan realisable doit comporter au moins une etape.")
+        return self
 
 
 # ------------------------------------------------------------------------ artefacts

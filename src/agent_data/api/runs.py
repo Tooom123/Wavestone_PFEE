@@ -13,6 +13,7 @@ import uuid
 from dataclasses import dataclass, field
 from pathlib import Path
 
+from agent_data import monitoring
 from agent_data.gpu import GpuSampler
 from agent_data.graph import RunTrace, Stage1
 from agent_data.pipeline import analyze
@@ -95,6 +96,7 @@ class RunManager:
 
             sampler = GpuSampler()
             sampler.start()
+            state = None
             try:
                 report, state = analyze(
                     run.question,
@@ -105,6 +107,15 @@ class RunManager:
                 )
             finally:
                 gpu = sampler.stop()
+                if stage1.settings.guardrail_log:
+                    monitoring.record(
+                        Path(stage1.settings.guardrail_log),
+                        run_id=run.id,
+                        datasets=run.datasets,
+                        state=state,
+                        guardrails=trace.guardrails,
+                        seconds=time.time() - run.started_at,
+                    )
             run.publish(
                 {
                     "kind": "done",
@@ -118,6 +129,8 @@ class RunManager:
                         "approval_wait_seconds": round(run.approval_wait_seconds, 1),
                         "gpu": gpu.as_dict(),
                         "wall_seconds": round(time.time() - run.started_at, 1),
+                        "guardrails": trace.guardrails,
+                        "guardrail_counts": trace.guardrail_counts(),
                     },
                 }
             )

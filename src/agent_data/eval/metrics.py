@@ -236,9 +236,21 @@ def _claimable(value: float, question: str) -> bool:
     return value not in numbers_in(question)
 
 
+_MONTHS = (
+    "janvier|fevrier|février|mars|avril|mai|juin|juillet|aout|août|septembre|octobre|"
+    "novembre|decembre|décembre"
+)
+_DATES = re.compile(
+    rf"\b\d{{4}}-\d{{2}}-\d{{2}}\b|\b\d{{1,2}}/\d{{1,2}}/\d{{2,4}}\b"
+    rf"|\b(?:1er|\d{{1,2}})\s+(?:{_MONTHS})(?:\s+\d{{4}})?",
+    re.IGNORECASE,
+)
+
+
 def claims_in(answer: str, question: str) -> list[float]:
-    """Les chiffres que la reponse avance (hors annees, petits entiers, chiffres de la question)."""
-    return [n for n in numbers_in(answer) if _claimable(n, question)]
+    """Les chiffres que la reponse avance (hors dates, annees, petits entiers, chiffres de la
+    question). « le 30 decembre 2012 » situe une periode, il n'avance pas de resultat."""
+    return [n for n in numbers_in(_DATES.sub(" ", answer)) if _claimable(n, question)]
 
 
 def faithfulness(

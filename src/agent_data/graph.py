@@ -26,7 +26,7 @@ from agent_data.llm import LLMClient, Usage, get_client
 from agent_data.planner import plan_analysis
 from agent_data.profiling import profile_csv
 from agent_data.sandbox import DockerSandbox, MountedDataset
-from agent_data.schemas import AgentState, ExecutionStatus
+from agent_data.schemas import AgentState, AnalysisPlan, ExecutionStatus
 
 
 @dataclass
@@ -39,9 +39,28 @@ class RunTrace:
 
     events: list[str] = field(default_factory=list)
     listener: Callable[[dict], None] | None = None
+    guardrails: list[dict[str, str]] = field(default_factory=list)
 
     def add(self, message: str) -> None:
         self.events.append(message)
+
+    def block(self, agent: str, name: str, detail: str = "") -> None:
+        """Note un garde-fou declenche : qui l'a declenche, lequel, pourquoi.
+
+        L'ordre des declenchements est conserve : c'est le flux qui mene a un blocage
+        (code en erreur, puis critique, puis plafond) qui interesse le suivi.
+        """
+        entry = {"agent": agent, "name": name, "detail": detail[:300]}
+        self.guardrails.append(entry)
+        self.emit("guardrail", **entry)
+
+    def guardrail_counts(self) -> dict[str, dict[str, int]]:
+        """Nombre de declenchements par agent et par garde-fou."""
+        counts: dict[str, dict[str, int]] = {}
+        for g in self.guardrails:
+            per_agent = counts.setdefault(g["agent"], {})
+            per_agent[g["name"]] = per_agent.get(g["name"], 0) + 1
+        return counts
 
     def emit(self, kind: str, **data: object) -> None:
         """Signale un evenement structure a l'ecoute eventuelle."""
@@ -76,6 +95,9 @@ class Stage1:
         }
         self.client = self.clients["coder"]
         self.sandbox = sandbox or DockerSandbox(self.settings)
+
+    def _plan(self, question: str, state: AgentState, trace: RunTrace) -> AnalysisPlan:
+        return _plan_with_guardrails(self, question, state, trace)
 
     def usage_by_role(self) -> dict[str, dict[str, float | int]]:
         """Tokens et temps consommes par chaque agent depuis la creation de la boucle."""
@@ -114,14 +136,23 @@ class Stage1:
         known_columns = {c.name for p in state.profiles for c in p.columns}
 
         trace.emit("stage", name="planner", model=self.settings.model_for("planner"))
-        state.plan = plan_analysis(question, state.profiles, client=self.clients["planner"])
+        state.plan = self._plan(question, state, trace)
         trace.add(f"plan : {len(state.plan.steps)} etape(s) — {state.plan.restated_question}")
         trace.emit("plan", plan=state.plan.model_dump(mode="json"))
+
+        if not state.plan.answerable:
+            # Garde-fou de faisabilite : rien n'est calcule sur une question que les donnees
+            # ne couvrent pas, plutot que de fabriquer un indicateur de substitution.
+            trace.block("planner", "hors_perimetre", state.plan.unanswerable_reason)
+            state.errors.append(f"Question hors perimetre : {state.plan.unanswerable_reason}")
+            trace.add("question hors perimetre : arret avant tout calcul")
+            return state
 
         if self.settings.human_validation:
             trace.emit("awaiting_approval")
             if not approve(state):
                 state.errors.append("Plan refuse par l'utilisateur.")
+                trace.block("humain", "plan_refuse")
                 trace.add("plan refuse : arret")
                 return state
 
@@ -155,6 +186,11 @@ class Stage1:
                 f"({len(state.execution.artifacts)} artefact(s), "
                 f"{state.execution.duration_seconds:.1f}s)"
             )
+
+            if state.execution.status is ExecutionStatus.TIMEOUT:
+                trace.block("sandbox", "delai_depasse")
+            elif state.execution.status is not ExecutionStatus.SUCCESS:
+                trace.block("coder", "code_en_erreur", state.execution.stderr[-200:])
 
             # L'erreur repart vers l'executeur : elle doit etre expurgee des valeurs de
             # donnees, sans quoi la boucle de correction les reinjecterait dans le LLM.
@@ -193,8 +229,10 @@ class Stage1:
                 return state
 
             trace.add(f"critique : {'; '.join(state.critique.issues)[:200]}")
+            trace.block("critic", "resultat_rejete", "; ".join(state.critique.issues))
             if state.critique.replan:
-                state.plan = plan_analysis(question, state.profiles, client=self.clients["planner"])
+                trace.block("critic", "replanification")
+                state.plan = self._plan(question, state, trace)
                 trace.add("replanification")
                 trace.emit("plan", plan=state.plan.model_dump(mode="json"), replanned=True)
 
@@ -204,9 +242,20 @@ class Stage1:
         state.errors.append(
             f"Plafond de {state.max_iterations} iterations atteint sans resultat satisfaisant."
         )
+        trace.block("boucle", "plafond_iterations", f"{state.max_iterations} iterations")
         state.artifacts = list(best_artifacts)
         trace.add(f"budget epuise ({len(state.artifacts)} artefact(s) conserve(s))")
         return state
+
+
+def _plan_with_guardrails(
+    stage: Stage1, question: str, state: AgentState, trace: RunTrace
+) -> AnalysisPlan:
+    dropped: list[str] = []
+    plan = plan_analysis(question, state.profiles, client=stage.clients["planner"], dropped=dropped)
+    if dropped:
+        trace.block("planner", "colonnes_inventees", ", ".join(sorted(set(dropped))))
+    return plan
 
 
 def build_graph(stage: Stage1):  # pragma: no cover - depend de langgraph

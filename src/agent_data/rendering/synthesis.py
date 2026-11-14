@@ -16,6 +16,9 @@ Regles :
 - Tu reponds a la question posee, directement, des la premiere phrase.
 - Tu t'appuies uniquement sur les resultats fournis : aucun chiffre invente.
 - Tu rappelles les hypotheses retenues quand elles changent la lecture du resultat.
+- Quand tu compares des groupes, tu cites la valeur de chaque groupe (taux, moyenne) avant \
+de conclure, et ta conclusion va dans le sens de ces valeurs : si les seniors partent a \
+41 % contre 24 %, ils partent davantage, quel que soit le coefficient d'un modele.
 - Pas de jargon statistique inutile, pas de code, pas de Markdown."""
 
 _TEMPLATE = """Question posee :
@@ -123,6 +126,8 @@ def synthesize(
     client: LLMClient | None = None,
 ) -> str:
     """Produit la reponse en langage naturel destinee au decideur."""
+    if not plan.answerable:
+        return abstention(plan)
     if not artifacts:
         return (
             "L'analyse n'a produit aucun resultat exploitable. "
@@ -137,3 +142,17 @@ def synthesize(
         artifacts=describe_artifacts(artifacts),
     )
     return client.complete(prompt, system=SYSTEM_PROMPT)
+
+
+def abstention(plan: AnalysisPlan) -> str:
+    """Reponse fixe quand les donnees ne couvrent pas la question : ni LLM, ni chiffre.
+
+    Le texte est ecrit ici plutot que par le modele : une reponse hors perimetre doit dire
+    clairement qu'elle ne sait pas, sans proposer d'indicateur de substitution.
+    """
+    reason = plan.unanswerable_reason.strip().rstrip(".") or "l'information demandée n'y figure pas"
+    return (
+        f"Les données disponibles ne permettent pas de répondre à cette question : {reason}. "
+        "Aucun calcul n'a été lancé. Pour y répondre, il faudrait des données qui contiennent "
+        "cette information."
+    )

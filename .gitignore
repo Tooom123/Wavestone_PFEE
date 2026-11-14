@@ -38,3 +38,6 @@ htmlcov/
 
 # Detail brut de l evaluation : contient des extraits de donnees (cadrage Wavestone)
 docs/eval/resultats.json
+
+# Journal local des garde-fous
+.agent_data/

@@ -54,6 +54,10 @@ class Settings(BaseSettings):
     human_validation: bool = Field(
         default=True, description="Validation humaine du plan au premier passage"
     )
+    guardrail_log: str = Field(
+        default=str(PROJECT_ROOT / ".agent_data" / "garde-fous.jsonl"),
+        description="Journal des garde-fous (une ligne par run) ; vide pour ne rien ecrire",
+    )
 
     # --- Sandbox -----------------------------------------------------------
     sandbox_image: str = Field(default="agent-data-sandbox:latest")

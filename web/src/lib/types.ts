@@ -33,6 +33,13 @@ export interface RunMetrics {
   };
   wall_seconds: number;
   approval_wait_seconds: number;
+  guardrails?: Guardrail[];
+}
+
+export interface Guardrail {
+  agent: string;
+  name: string;
+  detail: string;
 }
 
 export interface GpuRow {
@@ -112,6 +119,7 @@ export type RunEvent = { i: number; t: number } & (
   | { kind: "code"; code: string }
   | { kind: "execution"; status: "success" | "error" | "timeout"; artifacts: number; seconds: number; error: string | null }
   | { kind: "critique"; satisfactory: boolean; issues: string[]; replan: boolean }
+  | ({ kind: "guardrail" } & Guardrail)
   | { kind: "done"; report: Report; code: string | null; iterations: number; errors: string[]; metrics?: RunMetrics }
   | { kind: "error"; message: string; fatal?: string }
 );
