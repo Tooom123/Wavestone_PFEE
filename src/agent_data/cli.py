@@ -130,6 +130,16 @@ def _cmd_serve(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_guardrails(args: argparse.Namespace) -> int:
+    """Resume le journal des garde-fous : issues, agents qui bloquent, enchainements."""
+    from agent_data import monitoring
+
+    path = Path(args.log or get_settings().guardrail_log)
+    print(f"Journal : {path}\n")
+    print(monitoring.summarize(path).render())
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="agent-data", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -158,6 +168,10 @@ def build_parser() -> argparse.ArgumentParser:
         help="Prevu pour etre expose (tunnel) : genere un jeton si aucun n'est configure",
     )
     serve.set_defaults(func=_cmd_serve)
+
+    guardrails = sub.add_parser("garde-fous", help="Resume le journal des garde-fous")
+    guardrails.add_argument("--log", help="Chemin du journal (defaut : GUARDRAIL_LOG)")
+    guardrails.set_defaults(func=_cmd_guardrails)
 
     return parser
 

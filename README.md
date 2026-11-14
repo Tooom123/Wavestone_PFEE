@@ -261,6 +261,7 @@ telecharge ; `uv run python scripts/download_data.py` aussi.
 - [`docs/git-workflow.md`](docs/git-workflow.md) — branches, PR, livraison
 - [`docs/ci-cd.md`](docs/ci-cd.md) — pipeline, déploiement
 - [`docs/eval/`](docs/eval/) — golden dataset, métriques, test de RAGAS
+- [`docs/garde-fous.md`](docs/garde-fous.md) — garde-fous et leur suivi (`agent-data garde-fous`)
 - [`docs/finops/`](docs/finops/) — coûts on-premise contre cloud
 
 ## Conventions

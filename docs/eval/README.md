@@ -106,6 +106,13 @@ Deux passages complets, modèles de la démo (plan et synthèse `gemma4:e4b`, co
    assurance. Piste : un contrôle de faisabilité au planificateur (la question est-elle
    couverte par les colonnes du profil ?) avant tout calcul. C'est le point (g), garde-fous.
 
+**Garde-fou de faisabilité (14/11/2026).** Suite à ces résultats, le planificateur vérifie
+d'abord que les données couvrent la question ([`../garde-fous.md`](../garde-fous.md)). Mesuré
+sans exécution (`run_golden.py --faisabilite`, [`faisabilite.md`](faisabilite.md)) : 24 décisions
+justes sur 24, et les 4 réponses d'abstention passent le golden dataset (0/4 auparavant). L'effet
+des consignes de cohérence sur `cmp_seniors` et `cmp_enfants` reste à mesurer par un passage
+complet (Docker).
+
 **Corrections apportées au golden dataset après le premier passage.** Relire les échecs a montré
 trois défauts de l'évaluation, corrigés et testés (le premier passage, re-noté, passe de 15 à
 17/24 sans qu'aucun autre verdict ne bouge) :

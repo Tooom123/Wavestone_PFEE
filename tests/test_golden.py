@@ -378,3 +378,9 @@ def test_abstention_suivie_d_un_substitut_chiffre_echoue() -> None:
 def test_abstention_sans_chiffre_reussit() -> None:
     answer = "Nous ne disposons pas de note de satisfaction dans ces données."
     assert metrics.score_case(SATISFACTION, answer, []).passed
+
+
+def test_les_dates_ne_sont_pas_des_chiffres_avances() -> None:
+    text = "Les commandes vont du 1er janvier 2009 au 30 décembre 2012 (2012-12-30, 30/12/2012)."
+    assert metrics.claims_in(text, "?") == []
+    assert metrics.claims_in("Le profit atteint 30 % en 2012.", "?") == [30.0]

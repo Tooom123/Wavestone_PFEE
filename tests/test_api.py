@@ -119,3 +119,23 @@ def test_endpoint_systeme_donne_le_gpu_et_la_comparaison(data_dir: Path) -> None
     body = client.get("/api/system").json()
     assert {"gpu", "live", "models", "catalog"} <= set(body)
     assert any(row["is_reference"] for row in body["catalog"])
+
+
+def test_garde_fous_remontes_et_journalises(
+    data_dir: Path, plan_json: str, ok_result, tmp_path: Path, monkeypatch
+) -> None:
+    log = tmp_path / "journal.jsonl"
+    monkeypatch.setenv("GUARDRAIL_LOG", str(log))
+    critique_ko = '{"is_satisfactory": false, "issues": ["incomplet"]}'
+    llm = FakeLLM([plan_json, CODE, critique_ko, CODE, SATISFIED, "Synthese."])
+    client = _client(data_dir, llm, [ok_result, ok_result], human_validation=False)
+
+    body = {"question": "Une question", "datasets": ["ventes"], "validate_plan": False}
+    run_id = client.post("/api/runs", json=body).json()["run_id"]
+    events = _events(client, run_id)
+
+    metrics = events[-1]["metrics"]
+    assert metrics["guardrail_counts"] == {"critic": {"resultat_rejete": 1}}
+    assert any(e["kind"] == "guardrail" for e in events)
+    [line] = log.read_text().splitlines()
+    assert json.loads(line)["outcome"] == "repondu"

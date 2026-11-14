@@ -25,6 +25,9 @@ from agent_data.config import DATA_DIR, get_settings  # noqa: E402
 from agent_data.eval import golden, metrics, report  # noqa: E402
 from agent_data.eval.judge import judge_relevance  # noqa: E402
 from agent_data.graph import RunTrace, Stage1  # noqa: E402
+from agent_data.llm import get_client  # noqa: E402
+from agent_data.planner import plan_analysis  # noqa: E402
+from agent_data.profiling import profile_csv  # noqa: E402
 from agent_data.rendering import synthesize  # noqa: E402
 from agent_data.rendering.synthesis import describe_artifacts  # noqa: E402
 from agent_data.sandbox import docker_available  # noqa: E402
@@ -49,6 +52,45 @@ def rescore(data: dict, cases: list[golden.GoldenCase]) -> None:
     data["summary"] = metrics.summarize([metrics.CaseScore(**r["score"]) for r in data["results"]])
 
 
+def feasibility(cases: list[golden.GoldenCase], report_path: Path) -> int:
+    """Le planificateur refuse-t-il les questions hors perimetre, et seulement elles ?"""
+    settings = get_settings()
+    client = get_client(settings, "planner")
+    rows, errors = [], 0
+    for n, case in enumerate(cases, 1):
+        csv = csv_for(case.dataset)
+        if csv is None:
+            continue
+        expected = case.category != "hors_perimetre"
+        plan = plan_analysis(case.question, [profile_csv(csv, name=case.dataset)], client=client)
+        ok = plan.answerable == expected
+        errors += not ok
+        verdict = "realisable" if plan.answerable else f"refusee : {plan.unanswerable_reason}"
+        print(f"[{n}/{len(cases)}] {'ok ' if ok else 'KO '} {case.id} — {verdict}", flush=True)
+        rows.append((case, plan.answerable, ok, plan.unanswerable_reason))
+
+    refused = [r for r in rows if r[0].category == "hors_perimetre"]
+    accepted = [r for r in rows if r[0].category != "hors_perimetre"]
+    lines = [
+        "# Contrôle de faisabilité du planificateur\n",
+        f"> Généré par `scripts/run_golden.py --faisabilite` le {date.today().isoformat()} — "
+        f"planificateur : {settings.model_for('planner')}. Ne pas modifier à la main.\n",
+        f"- Questions hors périmètre refusées : **{sum(not r[1] for r in refused)}"
+        f"/{len(refused)}**",
+        f"- Questions réalisables refusées à tort : **{sum(not r[1] for r in accepted)}"
+        f"/{len(accepted)}**\n",
+        "| Question | Attendu | Décision | Raison donnée |",
+        "|---|---|---|---|",
+    ]
+    for case, answerable, ok, reason in rows:
+        expected = "réalisable" if case.category != "hors_perimetre" else "refus"
+        decision = ("✅ " if ok else "❌ ") + ("réalisable" if answerable else "refus")
+        lines.append(f"| `{case.id}` | {expected} | {decision} | {reason or '—'} |")
+    report_path.write_text("\n".join(lines) + "\n")
+    print(f"\n{len(rows) - errors}/{len(rows)} decisions justes ; rapport : {report_path}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--case", action="append", help="Identifiant de question (repetable)")
@@ -64,6 +106,11 @@ def main(argv: list[str] | None = None) -> int:
         action="store_true",
         help="Re-note les reponses enregistrees avec golden.json et les metriques actuels",
     )
+    parser.add_argument(
+        "--faisabilite",
+        action="store_true",
+        help="N'evalue que le controle de faisabilite du planificateur (sans Docker)",
+    )
     args = parser.parse_args(argv)
     out = Path(args.out)
 
@@ -77,6 +124,9 @@ def main(argv: list[str] | None = None) -> int:
         out.with_suffix(".md").write_text(report.render(data["results"], data["meta"]))
         print(f"Rapport : {out.with_suffix('.md')}")
         return 0
+
+    if args.faisabilite:
+        return feasibility(golden.load(Path(args.golden)), out.with_name("faisabilite.md"))
 
     if not docker_available():
         print("Docker est indisponible : l'evaluation exige un sandbox.", file=sys.stderr)
