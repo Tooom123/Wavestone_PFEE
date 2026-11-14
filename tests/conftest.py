@@ -17,6 +17,12 @@ from agent_data.schemas import (
 )
 
 
+@pytest.fixture(autouse=True)
+def _journal_isole(tmp_path_factory, monkeypatch) -> None:
+    """Les tests n'ecrivent jamais dans le journal des garde-fous du poste."""
+    monkeypatch.setenv("GUARDRAIL_LOG", str(tmp_path_factory.mktemp("journal") / "g.jsonl"))
+
+
 class FakeLLM:
     """Client LLM scripte : rend les reponses fournies, dans l'ordre."""
 

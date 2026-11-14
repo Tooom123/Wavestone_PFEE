@@ -79,6 +79,10 @@ def profile_column(series: pd.Series, *, include_top_values: bool = True) -> Col
         counts = series.value_counts(dropna=True).head(MAX_TOP_VALUES)
         top_values = [str(v) for v in counts.index]
 
+    date_range = None
+    if kind is ColumnKind.DATETIME and series.notna().any():
+        date_range = (series.min().date().isoformat(), series.max().date().isoformat())
+
     return ColumnProfile(
         name=str(series.name),
         kind=kind,
@@ -88,6 +92,7 @@ def profile_column(series: pd.Series, *, include_top_values: bool = True) -> Col
         unique_count=int(series.nunique(dropna=True)),
         stats=stats,
         top_values=top_values,
+        date_range=date_range,
     )
 
 
