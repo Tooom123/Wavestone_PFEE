@@ -63,8 +63,10 @@ def render_profile(profile: DatasetProfile) -> str:
     Format textuel plutot que JSON brut : a contenu egal il consomme nettement moins de
     tokens, ce qui compte avec un modele local a fenetre limitee.
     """
+    size = f", {profile.size_mb:.0f} Mo" if profile.size_mb >= 1 else ""
     lines = [
         f"Dataset '{profile.name}' — {profile.row_count} lignes, {len(profile.columns)} colonnes"
+        + size
     ]
     for col in profile.columns:
         parts = [f"  - {col.name} ({col.kind.value}, {col.dtype})"]

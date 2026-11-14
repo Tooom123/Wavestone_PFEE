@@ -9,7 +9,7 @@ RUN pip install --no-cache-dir \
         scipy==1.14.1 \
         scikit-learn==1.5.2 \
         plotly==5.24.1 \
-        duckdb==1.1.3 \
+        duckdb==1.5.5 \
     && rm -rf /root/.cache
 
 # Utilisateur non privilegie : le code genere ne tourne jamais en root.
