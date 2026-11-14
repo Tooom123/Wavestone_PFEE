@@ -78,8 +78,8 @@ class OllamaClient:
         except (urllib.error.URLError, OSError, TimeoutError):
             return False
 
-    def installed_models(self) -> list[str]:
-        """Liste les modeles presents sur le serveur."""
+    def tags(self) -> list[dict]:
+        """Modeles presents sur le serveur, tels que les decrit Ollama (nom, condensat, taille)."""
         try:
             with urllib.request.urlopen(  # noqa: S310  # nosec B310 - schema http(s) valide par Settings
                 f"{self.settings.llm_base_url}/api/tags", timeout=10
@@ -87,18 +87,25 @@ class OllamaClient:
                 payload = json.loads(response.read())
         except (urllib.error.URLError, OSError, TimeoutError, json.JSONDecodeError):
             return []
-        return [m.get("name", "") for m in payload.get("models", [])]
+        return list(payload.get("models", []))
+
+    def server_version(self) -> str:
+        """Version du serveur Ollama, ou chaine vide s'il ne repond pas."""
+        try:
+            with urllib.request.urlopen(  # noqa: S310  # nosec B310 - schema http(s) valide par Settings
+                f"{self.settings.llm_base_url}/api/version", timeout=5
+            ) as response:
+                return str(json.loads(response.read()).get("version", ""))
+        except (urllib.error.URLError, OSError, TimeoutError, json.JSONDecodeError):
+            return ""
+
+    def installed_models(self) -> list[str]:
+        """Liste les modeles presents sur le serveur."""
+        return [m.get("name", "") for m in self.tags()]
 
     def model_sizes_gb(self) -> dict[str, float]:
         """Taille sur disque de chaque modele installe, en Go."""
-        try:
-            with urllib.request.urlopen(  # noqa: S310  # nosec B310 - schema http(s) valide par Settings
-                f"{self.settings.llm_base_url}/api/tags", timeout=10
-            ) as response:
-                payload = json.loads(response.read())
-        except (urllib.error.URLError, OSError, TimeoutError, json.JSONDecodeError):
-            return {}
-        return {m.get("name", ""): m.get("size", 0) / 1e9 for m in payload.get("models", [])}
+        return {m.get("name", ""): m.get("size", 0) / 1e9 for m in self.tags()}
 
     def complete(self, prompt: str, *, system: str = "") -> str:
         """Interroge le modele et retourne sa reponse textuelle."""

@@ -1,0 +1,43 @@
+{
+  "locked_at": "2026-11-14",
+  "ollama": "0.21.1",
+  "roles": {
+    "planner": {
+      "model": "gemma4:e4b",
+      "digest": "c6eb396dbd5992bbe3f5cdb947e8bbc0ee413d7c17e2beaae69f5d569cf982eb",
+      "parameters": "8.0B",
+      "quantization": "Q4_K_M"
+    },
+    "coder": {
+      "model": "qwen2.5-coder:14b",
+      "digest": "9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849",
+      "parameters": "14.8B",
+      "quantization": "Q4_K_M"
+    },
+    "critic": {
+      "model": "qwen2.5-coder:14b",
+      "digest": "9ec8897f747e246e970bc5cfdda85d22f1123dc2e3d34978a010a75968716849",
+      "parameters": "14.8B",
+      "quantization": "Q4_K_M"
+    },
+    "synthesis": {
+      "model": "gemma4:e4b",
+      "digest": "c6eb396dbd5992bbe3f5cdb947e8bbc0ee413d7c17e2beaae69f5d569cf982eb",
+      "parameters": "8.0B",
+      "quantization": "Q4_K_M"
+    }
+  },
+  "golden": {
+    "passed": 17,
+    "cases": 24,
+    "by_category": {
+      "agregat": 4,
+      "comparaison": 2,
+      "temporel": 4,
+      "relation": 3,
+      "classement": 4,
+      "hors_perimetre": 0
+    },
+    "date": "2026-11-11"
+  }
+}

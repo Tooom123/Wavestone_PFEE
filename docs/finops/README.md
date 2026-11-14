@@ -111,16 +111,11 @@ confronter à l'équipe d'exploitation de Wavestone.
 
 ### Suivre les versions de modèles
 
-Le point (e) de la réunion demande de prévoir le coût de mise à jour des modèles. La mécanique
-proposée, à mettre en place ensuite :
-
-1. **Figer** : enregistrer le condensat (`digest`) de chaque modèle utilisé, pas seulement son nom.
-2. **Détecter** : une commande qui compare le condensat installé au condensat figé.
-3. **Autoriser une mise à jour par l'évaluation** : un nouveau modèle ne remplace l'ancien que
-   si le jeu de questions de référence (golden dataset) ne régresse pas.
-4. **Budgéter** : chaque mise à jour coûte une évaluation complète (durée et énergie
-   mesurées par `scripts/run_eval.py`) plus du temps d'ingénieur, déjà compté dans
-   `ops_hours_*`.
+Mis en place (point e) : voir [`../modeles.md`](../modeles.md). Le condensat de chaque modèle est
+figé dans `models.lock.json` avec le score du golden dataset ; `agent-data modeles verifier`
+détecte un écart ; `scripts/upgrade_model.py` n'adopte un modèle que si le golden dataset ne
+régresse dans aucune catégorie. Une mise à jour coûte un passage du golden dataset (21 min,
+moins d'un centime d'électricité) et surtout du temps d'ingénieur, compté dans `ops_hours_*`.
 
 ## Limites
 

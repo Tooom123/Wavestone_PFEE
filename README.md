@@ -262,6 +262,7 @@ telecharge ; `uv run python scripts/download_data.py` aussi.
 - [`docs/ci-cd.md`](docs/ci-cd.md) — pipeline, déploiement
 - [`docs/eval/`](docs/eval/) — golden dataset, métriques, test de RAGAS
 - [`docs/garde-fous.md`](docs/garde-fous.md) — garde-fous et leur suivi (`agent-data garde-fous`)
+- [`docs/modeles.md`](docs/modeles.md) — versions des modèles figées, mise à jour sous condition (`agent-data modeles`)
 - [`docs/finops/`](docs/finops/) — coûts on-premise contre cloud
 
 ## Conventions

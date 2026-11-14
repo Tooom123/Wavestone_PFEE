@@ -18,6 +18,7 @@ PROJECT_ROOT = Path(__file__).resolve().parent.parent.parent
 DATA_DIR = PROJECT_ROOT / "data"
 
 Role = Literal["planner", "coder", "critic", "synthesis"]
+ROLES: tuple[Role, ...] = ("planner", "coder", "critic", "synthesis")
 """Les quatre taches de l'agent, chacune pouvant etre servie par son propre modele."""
 
 
