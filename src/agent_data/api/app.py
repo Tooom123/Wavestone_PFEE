@@ -21,15 +21,13 @@ from fastapi.responses import StreamingResponse
 from pydantic import BaseModel, Field
 
 from agent_data.api.runs import RunBusyError, RunManager
-from agent_data.config import DATA_DIR, Role, Settings, get_settings
+from agent_data.config import DATA_DIR, ROLES, Settings, get_settings
 from agent_data.eval.cases import CASES
 from agent_data.gpu import gpu_info, read_sample
 from agent_data.gpu_catalog import comparison
 from agent_data.llm import OllamaClient
 from agent_data.profiling import profile_csv
 from agent_data.sandbox import DockerSandbox, docker_available
-
-ROLES: tuple[Role, ...] = ("planner", "coder", "critic", "synthesis")
 
 
 class RunRequest(BaseModel):

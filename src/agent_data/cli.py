@@ -33,6 +33,14 @@ def _cmd_check(_: argparse.Namespace) -> int:
         print(f"  modele         : {etat}")
         llm_ok = present
 
+    if llm_ok and settings.llm_provider == "ollama":
+        from agent_data import model_lock
+
+        drifts = model_lock.check(model_lock.load(), settings, ollama.tags())
+        print(f"  verrou modeles : {'conforme' if not drifts else 'ECARTS'}")
+        for d in drifts:
+            print(f"    - {d.role} : {d.message}")
+
     docker_ok = docker_available()
     print(f"Sandbox Docker   : {'disponible' if docker_ok else 'INDISPONIBLE'}")
     image_ok = docker_ok and DockerSandbox(settings).image_exists()
@@ -140,6 +148,63 @@ def _cmd_guardrails(args: argparse.Namespace) -> int:
     return 0
 
 
+def _cmd_models(args: argparse.Namespace) -> int:
+    """Verifie ou fige les versions exactes des modeles servis a chaque agent."""
+    import json
+
+    from agent_data import model_lock
+    from agent_data.llm import OllamaClient
+
+    settings = get_settings()
+    ollama = OllamaClient(settings)
+    tags = ollama.tags()
+    if not tags:
+        print("Ollama ne repond pas ou ne sert aucun modele.", file=sys.stderr)
+        return 1
+    lock = model_lock.load()
+
+    if args.action == "verifier":
+        drifts = model_lock.check(lock, settings, tags)
+        for role, entry in model_lock.snapshot(settings, tags).items():
+            print(f"{role:<10} {entry['model']:<22} {entry['digest'][:12] or '(absent)'}")
+        if lock and lock.get("golden"):
+            g = lock["golden"]
+            print(f"\nGolden dataset au verrou : {g['passed']}/{g['cases']} ({g['date']})")
+        if drifts:
+            print("\nEcarts avec le verrou :")
+            for d in drifts:
+                print(f"  - {d.role} : {d.message}")
+            return 1
+        print("\nConforme au verrou.")
+        return 0
+
+    # figer : les modeles actuels, avec le score qu'ils ont obtenu
+    golden = None
+    if args.golden:
+        results = json.loads(Path(args.golden).read_text())
+        evaluated = model_lock.models_of(results)
+        configured = {r: settings.model_for(r) for r in model_lock.ROLES}
+        if evaluated != configured and not args.force:
+            print(
+                f"L'evaluation a ete faite avec d'autres modeles ({evaluated}) "
+                f"que ceux configures ({configured}). --force pour passer outre.",
+                file=sys.stderr,
+            )
+            return 1
+        golden = model_lock.golden_summary(results)
+        problems = model_lock.regressions(lock.get("golden") if lock else None, golden)
+        if problems and not args.force:
+            print("Regression du golden dataset, verrou inchange :", file=sys.stderr)
+            for p in problems:
+                print(f"  - {p}", file=sys.stderr)
+            return 1
+    elif lock:
+        golden = lock.get("golden")
+    model_lock.save(model_lock.build(settings, tags, ollama.server_version(), golden))
+    print(f"Verrou ecrit : {model_lock.LOCK_PATH}")
+    return 0
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(prog="agent-data", description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -168,6 +233,12 @@ def build_parser() -> argparse.ArgumentParser:
         help="Prevu pour etre expose (tunnel) : genere un jeton si aucun n'est configure",
     )
     serve.set_defaults(func=_cmd_serve)
+
+    models = sub.add_parser("modeles", help="Verifie ou fige la version exacte des modeles")
+    models.add_argument("action", choices=["verifier", "figer"])
+    models.add_argument("--golden", help="figer : resultats.json de run_golden.py a enregistrer")
+    models.add_argument("--force", action="store_true", help="figer malgre un ecart")
+    models.set_defaults(func=_cmd_models)
 
     guardrails = sub.add_parser("garde-fous", help="Resume le journal des garde-fous")
     guardrails.add_argument("--log", help="Chemin du journal (defaut : GUARDRAIL_LOG)")
