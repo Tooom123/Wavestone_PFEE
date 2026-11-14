@@ -12,6 +12,7 @@ from __future__ import annotations
 
 from agent_data.llm import LLMClient, get_client
 from agent_data.llm.parsing import extract_python
+from agent_data.profiling.profiler import LARGE_FILE_MB
 from agent_data.sandbox import MountedDataset
 from agent_data.schemas import AnalysisPlan, Critique, DatasetProfile
 
@@ -21,7 +22,8 @@ conteneur isole, sans acces reseau.
 Contraintes absolues :
 - Bibliotheques disponibles : pandas, numpy, scipy, scikit-learn, plotly, duckdb, json.
 - Aucun acces reseau, aucun `pip install`, aucune lecture hors des chemins indiques.
-- Tu lis les CSV avec `pandas.read_csv`, pas avec DuckDB.
+- Tu lis les CSV avec `pandas.read_csv`, pas avec DuckDB, sauf pour un fichier signale \
+volumineux : suis alors la consigne « Fichiers volumineux ».
 - Les noms de colonnes contenant un espace s'ecrivent df['Order Date'] : jamais dans une
   requete SQL, ou ils seraient pris pour des chaines de caracteres.
 - Tu convertis explicitement les colonnes de dates avec `pd.to_datetime` avant d'en
@@ -62,6 +64,38 @@ NameError. Termine toujours par au moins un `save_finding` qui repond a la quest
 posee."""
 
 
+_LARGE_FILES_RULE = """Fichiers volumineux : {names}.
+Le conteneur n'a que 2 Go de memoire et un CSV d'1 Go en occupe environ 3 une fois lu par
+pandas : ne charge JAMAIS ces fichiers entiers avec pandas.read_csv.
+  - Agrege avec DuckDB, qui parcourt le fichier sans le charger. Dans le SQL, les noms de
+    colonnes s'ecrivent entre guillemets doubles ; le resultat est un DataFrame pandas :
+        import duckdb
+        t = duckdb.sql(\"\"\"
+            SELECT "Ma categorie" AS categorie, sum("Mon montant") AS total
+            FROM read_csv('{path}', strict_mode=false)
+            GROUP BY categorie ORDER BY total DESC
+        \"\"\").df()
+        save_table(t, "Total par categorie", step_id="s1")
+  - Si tu as besoin de pandas (modele, test statistique), charge seulement les colonnes
+    utiles d'un echantillon :
+        df = duckdb.sql(\"\"\"SELECT "Col A", "Col B" FROM read_csv('{path}', strict_mode=false)
+                           USING SAMPLE 200000 ROWS\"\"\").df()"""
+# Texte de prompt, jamais execute par l'agent : rempli par `.replace`, pas par une f-string.
+
+
+def _large_files_rule(large: list[MountedDataset]) -> str:
+    """Consigne pour les gros fichiers : agreger sans charger (docs/scalabilite.md).
+
+    Mesure : un CSV d'1 Go occupe ~2,9 Go une fois lu par pandas, au-dela des 2 Go du
+    sandbox ; DuckDB l'agrege en ~250 Mo.
+    """
+    if not large:
+        return ""
+    names = ", ".join(f"'{d.container_path}'" for d in large)
+    path = large[0].container_path
+    return _LARGE_FILES_RULE.replace("{names}", names).replace("{path}", path)
+
+
 def build_prompt(
     plan: AnalysisPlan,
     profiles: list[DatasetProfile],
@@ -76,7 +110,18 @@ def build_prompt(
     Quand une critique est fournie, le prompt devient une demande de correction : c'est
     ce qui referme la boucle agentique.
     """
-    paths = "\n".join(f"  - '{d.container_path}' (dataset '{d.name}')" for d in datasets)
+    sizes = {p.name: p for p in profiles}
+    paths = "\n".join(
+        f"  - '{d.container_path}' (dataset '{d.name}'"
+        + (
+            f", {sizes[d.name].row_count} lignes, {sizes[d.name].size_mb:.0f} Mo"
+            if d.name in sizes
+            else ""
+        )
+        + ")"
+        for d in datasets
+    )
+    large = [d for d in datasets if d.name in sizes and sizes[d.name].size_mb >= LARGE_FILE_MB]
     steps = "\n".join(
         f"  {s.id}. {s.goal} — methode : {s.method}"
         + (f" — colonnes : {', '.join(s.columns)}" if s.columns else "")
@@ -95,6 +140,7 @@ def build_prompt(
         f"Plan a implementer :\n{steps}",
         f"Fichiers CSV disponibles :\n{paths}",
         f"Colonnes :\n{schema}",
+        _large_files_rule(large),
         _ARTIFACT_CONTRACT,
     ]
 

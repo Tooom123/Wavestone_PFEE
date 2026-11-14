@@ -263,6 +263,7 @@ telecharge ; `uv run python scripts/download_data.py` aussi.
 - [`docs/eval/`](docs/eval/) — golden dataset, métriques, test de RAGAS
 - [`docs/garde-fous.md`](docs/garde-fous.md) — garde-fous et leur suivi (`agent-data garde-fous`)
 - [`docs/modeles.md`](docs/modeles.md) — versions des modèles figées, mise à jour sous condition (`agent-data modeles`)
+- [`docs/scalabilite.md`](docs/scalabilite.md) — jeux de plusieurs Go : mesures, DuckDB, impact infra et coûts
 - [`docs/finops/`](docs/finops/) — coûts on-premise contre cloud
 
 ## Conventions

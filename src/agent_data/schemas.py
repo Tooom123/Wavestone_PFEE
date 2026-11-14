@@ -86,6 +86,11 @@ class DatasetProfile(Base):
     source_path: str = Field(description="Chemin local du CSV ; jamais son contenu")
     row_count: int = Field(ge=0)
     columns: list[ColumnProfile]
+    size_mb: float = Field(default=0.0, ge=0.0, description="Taille du fichier source, en Mo")
+    profiling: str = Field(
+        default="pandas, fichier complet",
+        description="Comment le profil a ete calcule (moteur, echantillon eventuel)",
+    )
     profiled_at: datetime = Field(default_factory=datetime.now)
 
     def column(self, name: str) -> ColumnProfile | None:
