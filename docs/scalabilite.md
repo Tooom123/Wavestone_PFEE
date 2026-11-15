@@ -92,7 +92,9 @@ Le choix dépend des plateformes et abonnements existants chez Wavestone (point 
 
 - Les fichiers de test répètent Superstore : la compression Parquet est surestimée, et la
   distribution des valeurs n'est pas celle d'un vrai jeu de plusieurs Go.
-- Les mesures DuckDB ont été faites sur le poste avec 2 cœurs, pas dans le conteneur (Docker
-  indisponible lors des mesures). Reste à valider un run complet de l'agent sur un fichier d'1 Go,
-  pour vérifier que le modèle suit la consigne « Fichiers volumineux ».
+- **Run complet de l'agent sur un CSV d'1 Go (15/11/2026)** : profil DuckDB des 4,6 M lignes, code
+  généré qui agrège avec DuckDB sans charger le fichier, réussi à la 2e tentative (une erreur
+  corrigée par la boucle), 49 s au total. Chiffres justes (2012 : 2 042 260 160, identique au
+  benchmark). Mais la synthèse a ajouté une phrase sur « 2017 et 2018 », années absentes des
+  données : un défaut de l'étage 2, sans lien avec le volume, à surveiller.
 - Extrapolation à 10 Go : linéaire, non mesurée.
