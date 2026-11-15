@@ -113,6 +113,12 @@ justes sur 24, et les 4 réponses d'abstention passent le golden dataset (0/4 au
 des consignes de cohérence sur `cmp_seniors` et `cmp_enfants` reste à mesurer par un passage
 complet (Docker).
 
+**Passage complet avec les garde-fous (15/11/2026) : 22/24** (contre 17). Hors périmètre 4/4
+(0/4 avant), relation 4/4, et `cmp_enfants` désormais juste. Restent deux échecs en comparaison :
+`cmp_seniors` (l'étage 1 ne produit aucun résultat) et `cmp_contrat`, qui régresse : les bons taux
+sont calculés (rappel 100 %) mais la synthèse cite d'autres chiffres (26,54 %, le taux global, au
+lieu de 42,7 %). Score enregistré comme référence dans `models.lock.json`.
+
 **Corrections apportées au golden dataset après le premier passage.** Relire les échecs a montré
 trois défauts de l'évaluation, corrigés et testés (le premier passage, re-noté, passe de 15 à
 17/24 sans qu'aucun autre verdict ne bouge) :

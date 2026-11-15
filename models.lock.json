@@ -1,5 +1,5 @@
 {
-  "locked_at": "2026-11-14",
+  "locked_at": "2026-11-15",
   "ollama": "0.21.1",
   "roles": {
     "planner": {
@@ -28,16 +28,16 @@
     }
   },
   "golden": {
-    "passed": 17,
+    "passed": 22,
     "cases": 24,
     "by_category": {
       "agregat": 4,
       "comparaison": 2,
       "temporel": 4,
-      "relation": 3,
+      "relation": 4,
       "classement": 4,
-      "hors_perimetre": 0
+      "hors_perimetre": 4
     },
-    "date": "2026-11-11"
+    "date": "2026-11-15"
   }
 }
